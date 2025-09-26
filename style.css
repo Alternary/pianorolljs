@@ -1,0 +1,134 @@
+.grid-snap {
+  /* width: 40px; */
+  height: 20px;
+  border-radius: 9px;
+  /* padding: 1.1%; */
+  /* 2%; */
+  /* margin-left: 40px; */
+  /*40px;*/
+  vertical-align: middle;
+  /* position: relative; */
+  /* top: 160px; */
+  /* background-color: violet; */
+  background:
+    linear-gradient(90deg,
+      blue,
+      violet);
+}
+
+.dragitem {
+  width: 100px;
+  height: 100px;
+  background: blue;
+}
+
+body {
+  height: 400px;
+  /* width: 800px; */
+}
+
+#lol {
+  height: 490px;
+  width: 750px;
+  overflow-y: scroll;
+  display: inline-block;
+}
+
+#pianorollWithLeftMargin {}
+
+#parallelLolScrollBarWrapper {
+  display: inline-block;
+  transform-origin: left top;
+  background-color: blue;
+  height: 490px;
+  width: 15px;
+  overflow-y: scroll;
+}
+
+#parallelLolScrollBar {
+  transform-origin: left top;
+  background-color: blue;
+  height: 400px;
+  width: 0px;
+}
+
+#parallelPianorollScrollBarWrapper {
+  position: relative;
+  left: 47.3px;
+  width: 700px;
+  /* background-color: blue; */
+  /* height: 20px; */
+  height: 39px;
+  overflow-x: scroll;
+}
+
+#parallelPianorollScrollBar {
+  transform-origin: left top;
+  background: linear-gradient(to right, greenyellow, blue);
+  height: 25px;
+  width: 9999px;
+  font-family: monospace;
+  font-size: 16.62px;
+}
+
+#pianorollView {
+  border: 5px outset black;
+  display: inline-block;
+  width: 700px;
+  height: inherit;
+  overflow-x: scroll;
+  overflow-y: hidden;
+}
+
+#asd {
+  transform: scale(-1, 1)
+}
+
+#boundingBox {
+  transform-origin: left top;
+  background-image:
+    repeating-linear-gradient(0deg,
+      transparent 0 38px,
+      black 20px 40px),
+    repeating-linear-gradient(90deg,
+      transparent 0 38px,
+      black 20px 40px),
+    /* repeating-linear-gradient(0deg, */
+    /*   transparent 0 38px, */
+    /*   rgba(123, 0, 0, 0.05) 20px 80px), */
+    /* repeating-linear-gradient(90deg, */
+    /*   transparent 0 38px, */
+    /*   rgba(123, 0, 0, 0.05) 40px 80px), */
+    repeating-linear-gradient(0deg,
+      transparent 0 153px,
+      rgba(123, 0, 0, 0.3) 20px 160px),
+    repeating-linear-gradient(90deg,
+      transparent 0 153px,
+      rgba(123, 0, 0, 0.3) 40px 160px),
+    repeating-linear-gradient(0deg,
+      transparent 0 472px,
+      rgba(0, 0, 123, 0.9) 20px 480px),
+    repeating-linear-gradient(90deg,
+      transparent 0 632px,
+      rgba(0, 0, 123, 0.9) 40px 640px),
+    linear-gradient(transparent);
+  height: inherit;
+  width: 9999px;
+}
+
+#leftMargin {
+  position: relative;
+  top: -5px;
+  transform-origin: left top;
+  display: inline-block;
+  width: 20px;
+  height: inherit;
+  /* height: 1899px; */
+  background: linear-gradient(to bottom, greenyellow, blue);
+}
+
+#marker {
+  background-color: green;
+  width: 9px;
+  height: 100%;
+}
