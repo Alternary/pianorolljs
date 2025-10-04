@@ -12,8 +12,8 @@
     <div id="root"></div>
     <script type="module" src="main.js"></script>
 
-    <p id="instructions">
-    </p>
+    <h4 id="instructions">
+    </h4>
     <div id="parallelLolScrollBarWrapper">
       <div id="parallelLolScrollBar">
       </div>
@@ -45,6 +45,37 @@
         </div>
     </div>
     <p id="asd">lol<b>lol</b>P</p>
+    <audio src="./samples/drums/bassdrum.mp3" controls></audio>
+    <label for="attack">Attack</label>
+    <input
+      name="attack"
+      id="attack"
+      type="range"
+      min="0"
+      max="1"
+      value="0.2"
+      step="0.1" />
+
+    <label for="release">Release</label>
+    <input
+      name="release"
+      id="release"
+      type="range"
+      min="0"
+      max="1"
+      value="0.5"
+      step="0.1" />
+
+    <label for="rate">Rate</label>
+    <input
+      name="rate"
+      id="rate"
+      type="range"
+      min="0.1"
+      max="2"
+      value="1"
+      step="0.1" />
+    <button id="playBtn" class="playBtn">play</button>
     <!-- <p>lol</p> -->
 
   </body>
