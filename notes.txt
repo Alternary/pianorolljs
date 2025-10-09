@@ -1,0 +1,38 @@
+I could instead try electron
+
+now how would I play a score?
+what I could do is to backend give a copy of the score and play it at the same time as I start movning the time marker on frontend
+because sending note signals in real time does not work
+
+I want pure data to also send scores back to pianoroll
+also I want the score playing to update when updating the score in frontend, so I want to send the play signals as the notes come under the play marker
+
+then multiple grid levels and drawing multiresolution grid
+there is the problem that note position coordinate origins are different based on where position initialized, maybe just compensate
+wait, transform should never be used with non-one parameters, because it fucks interact
+
+
+x, y and w are correctly updated but still it teleports
+moving interactNote [x,y,w] fetch into local listeners
+it somewhat works
+I still need relative and absolute coordinates
+and from absolute coordinates and zooms derive relative ones
+how do I update absolute coords?
+
+
+what kind of data to send?
+I will have open various instruments and then within those instruments, columns of notes
+so, a list of lists of note numbers
+not note numbers but rather note frequencies
+
+
+I want an external piano roll sequencer that outputs midi
+although, I do want it to play the notes from pure data
+what I could do is take an existing visual piano roll editor and make it play pure data notes
+
+I could even try making my own with some graphics library, either gtk or qt
+
+but for now, I might really only need a piano roll editor for tones and using within pure data step sequencers
+
+also I want to record on that piano roll
+playing back notes as keys are pressed has latency, so I might instead use pure data to record notes and then convert into json for the javascript client
