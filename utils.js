@@ -1,6 +1,5 @@
 import seedrandom from 'seedrandom'
 
-//utils
 const arithmeticProgression = n => Array.from(Array(n)).map((x, i) => i)
 const ap = arithmeticProgression
 const chooseRandom = l => l[Math.floor(Math.random() * l.length)]
@@ -12,15 +11,18 @@ function sleep(ms) {
 const groupBy = (l, num) => {
   let sublists = []
   let currentSublist = []
-  for (let i in l) {
-    currentSublist.push(l[i])
-    if (i % num == num - 1) {
+  for (let i = 0; i < l.length + 1; i++) {
+    if (((i % num == 0) && i != 0) || i == l.length) {
       sublists.push(currentSublist)
       currentSublist = []
     }
+    currentSublist.push(l[i])
   }
-  sublists.push(currentSublist)
   return sublists
+}
+{
+  // console.log('groupBy', groupBy([1, 2, 3], 2))
+  // console.log('groupBy', groupBy([1, 2, 3, 4], 2))
 }
 function mod(n, m) { return ((n % m) + m) % m }
 {
@@ -137,282 +139,161 @@ function concatLists(ls) {
 {
   // console.log('concatLists', concatLists([[1, 2], [3, 4]]))
 }
+let concatStrings = l => {
+  let output = ""
+  for (let s of l) {
+    output += s
+  }
+  return output
+}
+// console.log(concatStrings(["a", "b"]))
+let intercalateStrings = (l, x) => {
+  return concatStrings(concatLists(l.map(s => [s, x])).slice(0, 2 * l.length - 1))
+}
+// console.log(intercalateStrings(["a", "b"], ","))
 function logBase(base, x) { return Math.log(x) / Math.log(base) }
 
-
-
-
-let drumFiles = [
-  "silence.mp3", //silence
-  "bassdrum3.mp3",
-  "ringsnare.mp3",
-  "hat.mp3",
-  "snare1.mp3",
-  "distsnare.mp3", //silence
-  "combsnare.mp3", //silence
-  "bassdrum5.mp3",
-  "chebsnare.mp3", //silence
-  "bassdrum2.mp3",
-  "snare2.mp3",
-  "snare6.mp3",
-  "snare18.mp3",
-  "snary.mp3",
-  "hatty.mp3",
-  "bassdrum4.mp3",
-  "exptriangle.mp3",
-  "goodsnare.mp3",
-  "chebbassdrum.mp3", //silence
-
-  'bassdrum2.mp3',
-  'bassdrum3.mp3',
-  'bassdrum4_modified2.mp3',
-  'bassdrum4_modified3.mp3',
-  'bassdrum4.mp3',
-  'bassdrum5.mp3',
-  'bassdrum.mp3',
-  'chebbassdrum.mp3',
-  'chebsnare.mp3',
-  'cmtambassdrum.mp3',
-  'combbassdrum.mp3',
-  'combsnare.mp3',
-  'descender.mp3',
-  'distbassdrum.mp3',
-  'distsnare.mp3',
-  'divbassdrum.mp3',
-  'erans19.mp3',
-  'exptriangle.mp3',
-  'goodsnare.mp3',
-  'grainscatterbassdrum.mp3',
-  'gverbbassdrum.mp3',
-  'gverbsnare.mp3',
-  'hat.mp3',
-  'hatty.mp3',
-  'marble.mp3',
-  'mbgatelrbassdrum.mp3',
-  'mbgatemsbassdrum.mp3',
-  'mbgatestereobassdrum.mp3',
-  'ringsnare.mp3',
-  'snare18.mp3',
-  'snare1.mp3',
-  'snare2.mp3',
-  'snare6.mp3',
-  'snary.mp3',
-  'weird4.mp3',
-  'zitabassdrum.mp3',
-].map(s => './samples/drums/' + s)
-
-const drumPatterns = [
-  /*
-  [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
-  [1,0,0,0, 2,0,0,2, 1,0,0,0, 2,0,0,0],
-  [1,0,0,0, 1,0,0,0, 2,0,0,0, 1,0,0,2],
-  [1,0,0,1, 2,0,0,1, 1,0,1,0, 2,0,1,0],
-  [1,0,3,0, 2,0,0,0, 0,1,1,0, 2,0,4,2],
-  [1,0,0,1, 0,3,1,0, 2,0,4,0, 4,1,3,2],
-  [1,0,2,1, 0,3,2,0, 0,0,2,0, 4,1,2,0]
-  */
-  [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-  [1, 0, 0, 0, 2, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0],
-  [1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 2],
-  [1, 0, 0, 1, 2, 0, 0, 1, 1, 0, 1, 0, 2, 0, 1, 0],
-  [1, 0, 3, 0, 2, 0, 0, 0, 0, 1, 1, 0, 2, 0, 4, 2],
-  [1, 0, 0, 1, 0, 3, 1, 0, 2, 0, 4, 0, 4, 1, 3, 2],
-  [1, 0, 2, 1, 0, 3, 2, 0, 0, 0, 2, 0, 4, 1, 2, 0]
-]
-
-function makeDrumBeat(seed, density, randomness) {
-  let drumSilences = randomFloats(seed, 32)
-    .map(
-      r => density == 0 || r > 0.2 + 0.8 * ((density - 0.08) / (1.00 - 0.08))
-        ? 0
-        : 1
-    )
-  // console.log('drumSilences', drumSilences)
-  let drumPattern = zipWith(
-    (x, y) => x * y,
-    drumSilences,
-    arithmeticProgression(32)
-      .map(i => {
-        let newSeed = seed + '§askldhasd' + i
-        // console.log('lol', drumPatterns[randomInt(0, drumPatterns.length - 1, newSeed)][i % 16])
-        return randomFloat(newSeed) < randomness
-          ? randomInt(0, 8, newSeed)
-          : drumPatterns[randomInt(0, drumPatterns.length - 1, newSeed)][i % 16]
-      })
-  )
-  return drumPattern
-}
-// console.log('lol', randomInts(0, 1, 'lol', 8))
-{
-  // console.log('makeDrumBeat', makeDrumBeat('lol', 0.1, 0.2))
-  // console.log('makeDrumBeat', makeDrumBeat('lol', 0.9, 0.2))
-  // console.log('makeDrumBeat', makeDrumBeat('lol2', 0.9, 0.9))
-  // console.log('makeDrumBeat', makeDrumBeat('lol3', 0.9, 0.2))
-}
-function mixLists(l1, l2, percentage, seed) {
-  let rs = randomFloats(seed, l1.length)
-  // console.log(rs)
-  return zipWithMany((x, y, r) =>
-    r <= percentage
-      ? x
-      : y,
-    [l1, l2, rs]
-  )
-}
-{
-  // console.log('mixLists', mixLists([1, 2, 3], [4, 5, 6], 0.5, 'lol'))
-  // console.log('mixLists', mixLists([1, 2, 3], [4, 5, 6], 0.5, 'lol4'))
-  // console.log('mixLists', mixLists([1, 2, 3], [4, 5, 6], 0.1, 'lol4'))
-  // console.log('mixLists', mixLists([1, 2, 3], [4, 5, 6], 0.9, 'lol4'))
-}
-function mixListsMany(ls, percentages, seedFloats) {
-  // console.log('in mixListsMany')
-  // console.log(seedFloats)
-  // console.log(zipLists(ls))
-  // console.log(cumulate(percentages))
-  // console.log('exiting')
-  return zipWith(
-    (column, r) => column[cumulate(percentages).findIndex(x => r <= x)],
-    zipLists(ls),
-    seedFloats
-  )
-}
-{
-  // console.log('mixListsMany', mixListsMany([[1, 2, 3], [4, 5, 6], [7, 8, 9]], [0.1, 0.5, 0.9], randomFloats('seed', 3)))
-}
-function loopContinuum00(randomness, overallDuration, duration, l1, l2, loopSeeds, mixSeeds) {
-  // console.log('in loopContinuum00, overallDuration, duration, l1, l2, loopSeeds, mixSeeds\n', overallDuration, duration, l1, l2, loopSeeds, mixSeeds)
-  let len = l1.length
-  let progressionPercentage = 1 - duration / overallDuration
-  let l12 = mixListsMany([l1, l2, loopSeeds.slice(0, len)], [(1 - progressionPercentage) * (1 - randomness), progressionPercentage * (1 - randomness), randomness], mixSeeds.slice(0, len))
-  if (duration <= 0) {
-    return [l2]
+function lfsr(seed, len) {
+  // has period 2^128-1
+  let state = seed
+  // let state = (BigInt(1) << BigInt(127)) | BigInt(1)
+  let bits = []
+  for (let i = 0; i < len; i++) {
+    // console.log(Number(state & BigInt(1)))
+    bits.push(Number(state & BigInt(1)))
+    let newbit = (state ^ (state >> BigInt(1)) ^ (state >> BigInt(2)) ^ (state >> BigInt(7))) & BigInt(1)
+    state = (state >> BigInt(1)) | (newbit << BigInt(127))
   }
-  else {
-    return [l1].concat(loopContinuum00(randomness, overallDuration, duration - 1, l12, l2, loopSeeds.slice(len), mixSeeds.slice(len)))
+  return bits
+}
+{
+  // console.log('lfsr', lfsr(BigInt(2), 99))
+  // console.log('lfsr', groupBy(lfsr(BigInt(9), 53 * 9), 53))
+}
+function lfsrFloats(seed, len) {
+  //skip through, because with similar sized seeds, generates similar initial numbers
+  let skip = 9999
+  let bitGroupLength = 53 //same as in Math.random()
+  let bits = lfsr(seed + BigInt(1), bitGroupLength * len + skip).slice(skip)
+  let output = []
+  let groupedBits = groupBy(bits, bitGroupLength)
+  // console.log(bits.length)
+  for (let bitGroup of groupedBits) {
+    let floatingPointNumber = 0
+    for (let bitIndex in bitGroup) {
+      floatingPointNumber += bitGroup[bitIndex] * (2 ** (-bitIndex - 1))
+    }
+    output.push(floatingPointNumber)
   }
+  return output
 }
-let loopContinuum0 = (randomness, duration, l1, l2, loopSeeds, mixSeeds) => loopContinuum00(randomness, duration, duration, l1, l2, loopSeeds, mixSeeds)
-
-let loopContinuum = (randomness, duration, l1, l2, loopSeeds, mixSeeds) => concatLists(loopContinuum0(randomness, duration, l1, l2, loopSeeds, mixSeeds))
-
-let randomFloatContinuum0 = (randomness, duration, loopLength, seed) => loopContinuum0(randomness, duration, randomFloats(seed + 'laksjd', loopLength), randomFloats(seed + 'asdlkj', loopLength), randomFloats(seed + 'asdlkhj', loopLength * duration), randomFloats(seed + 'qwejpas', loopLength * duration))
-let randomFloatContinuum = (randomness, duration, loopLength, seed) => concatLists(randomFloatContinuum0(randomness, duration, loopLength, seed))
 {
-  // console.log('randomFloatContinuum', randomFloatContinuum(0.1, 3, 4, 'lol'))
+  // console.log('lfsrFloats', lfsrFloats(BigInt(0), 9))
+  // console.log('lfsrFloats', lfsrFloats(BigInt(1), 9))
+  // console.log('lfsrFloats', lfsrFloats(BigInt(999), 9))
+  // console.log('lsfrFloats', lfsrFloats(BigInt(9), 39))
 }
-let randomIntContinuum0 = (start, end, randomness, duration, loopLength, seed) => loopContinuum0(randomness, duration,
-  randomInts(start, end, seed + 'asdlk', loopLength),
-  randomInts(start, end, seed + 'alskd', loopLength),
-  randomInts(start, end, seed + 'jasdas', loopLength * duration),
-  randomFloats(seed + 'asdlkj', loopLength * duration)
-)
-let randomIntContinuum = (start, end, randomness, duration, loopLength, seed) => concatLists(randomIntContinuum0(start, end, randomness, duration, loopLength, seed))
+function lfsrInts(seed, len) {
+  let skip = 9999
+  let bitGroupLength = 52
+  let bits = lfsr(seed, bitGroupLength * len + skip).slice(skip)
+  let output = []
+  let groupedBits = groupBy(bits, bitGroupLength)
+  // console.log(bits.length)
+  for (let bitGroup of groupedBits) {
+    let floatingPointNumber = 0
+    for (let bitIndex in bitGroup) {
+      floatingPointNumber += bitGroup[bitIndex] * (2 ** bitIndex)
+    }
+    output.push(floatingPointNumber)
+  }
+  return output
+}
+let lfsrIntsInRange = (min, max, seed, len) => lfsrFloats(seed, len).map(r => min + Math.floor(r * (max + 1 - min)))
 {
-  // console.log('randomIntContinuum', randomIntContinuum(0, 5, 0.1, 4, 4, 'lol'))
+  // console.log('lfsrIntsInRange', lfsrIntsInRange(0, 3, BigInt(0), 22))
 }
 
-let chainContinuumDrum = (seed, randomness0) => {
-  let overallDuration = 7777//9999 //loopContinuum fails at too large durations, thankfully only quite large, so I need not probably fix it
-  let randomness = randomness0
-  let randomness2 = 0.5
-  let density = 0.9
-  let maxAmount = Math.floor(logBase(2, 128))
-  let drumBeat1 = i =>
-    concatLists(
-      ap(Math.ceil((2 ** i) / 32))
-        .map(j => makeDrumBeat(seed + i + 'asdjh' + j, density, randomness))
-    ).slice(0, 2 ** i)
-  let drumBeat2 = i =>
-    concatLists(
-      ap(Math.ceil((2 ** i) / 32))
-        .map(j => makeDrumBeat(seed + i + 'asdlk' + j, density, randomness))
-    ).slice(0, 2 ** i)
-  // console.log(continuum(0))
-  // console.log(continuum(1))
-  // console.log(continuum(8))
-  function continuum(i) {
-    if (i == 0) {
-      return randomInts(0, drumFiles.length, seed, overallDuration)
+let duplicate = (amount, list) => {
+  let output = []
+  for (let x of list) {
+    for (let i = 0; i < amount; i++) {
+      output.push(x)
+    }
+  }
+  return output
+}
+{
+  // console.log('duplicate', duplicate(4, [1, 2, 3]))
+}
+let shrinkList0 = (percentage, currentLength, removedAmount, l) => {
+  if (l.length >= 1) {
+    if (percentage >= removedAmount / currentLength) {
+      return shrinkList0(percentage, currentLength + 1, removedAmount + 1, l.slice(1))
     }
     else {
-      let loopSeeds = continuum(i - 1)
-      // console.log('stuffs', overallDuration / (2 ** i), drumBeat1(i), drumBeat2(i), loopSeeds, randomFloats(seed + i, loopSeeds.length), '\nend')
-      // console.log('randomFloatContinuum of large duration', randomFloatContinuum(0.1, overallDuration / (2 ** i), drumBeat1(i).length, 'lol seed'))
-      let l = loopContinuum(randomness2, overallDuration / (2 ** i), drumBeat1(i), drumBeat2(i), loopSeeds, randomFloats(seed + i, loopSeeds.length))
-      return l
+      let rest = shrinkList0(percentage, currentLength + 1, removedAmount, l.slice(1))
+      // console.log('rest', rest)
+      return [l[0]].concat(rest)
     }
   }
-  return continuum(maxAmount)
+  else {
+    return []
+  }
+}
+let shrinkList = (percentage, l) => shrinkList0(1 - percentage, 0, 0, l)
+{
+  // console.log('shrinkList', shrinkList(0.5, [1, 2, 3, 4, 5, 6, 7, 8]))
+}
+let square = x => 2 * Math.floor(2 * x) - 4 * Math.floor(x) - 1
+let sawtooth = x => x - 2 * Math.floor((x + 1) / 2)
+let scaledsaw = (s, x) => sawtooth(x * s) / s
+let step = 0.02
+let frequency = 48000
+let sustain = (l, x, y) => x < step * frequency * l ? y : 0
+let complexLog = (a, b) => [Math.log(Math.sqrt(a * a + b * b)), Math.atan2(b, a)]
+let complexMagnitude = (a, b) => a * a + b * b
+let weird4 = x => x == 0 ? 0 : sustain(0.1, x, sawtooth(complexMagnitude(...complexLog(Math.sin(x / 4), sawtooth(x * Math.PI)))))
+function goodsnare() {
+  let len = 6000//6000
+  let len2 = 480000//480000
+  let b = 1
+  let maxDensity = 1 / 10
+  let minDensity = 1 / 70
+  let l = lfsrIntsInRange(Math.floor(1 / maxDensity), Math.floor(1 / minDensity), BigInt(0), len2)
+  // console.log(l.slice(99)) //l looks in order
+  let c = 1
+  let d = 50
+  let checkWhetherNaN = (val, fx) => { if (isNaN(fx)) { throw new Error(val + ' was NaN under x') } else { return fx } }
+  let a2 =
+    l.reduce(
+      (i, is) => concatLists([[1].concat(
+        ap(i)
+          .map(x => x * 0.001)
+          .map(x => square(scaledsaw(1 / 9, weird4(x))))
+      ), is]),
+      [])
+
+  let a = duplicate(c,
+    shrinkList(1 / c, duplicate(b,
+      l.reduce(
+        (i, is) => concatLists([[1].concat(
+          ap(i)
+            .map(x => x * 0.001)
+            .map(x => square(scaledsaw(1 / 9, weird4(x))))
+        ), is]),
+        [])
+    ))
+  )
+  return a.slice(0, len)
+  return zipWith((x, y) => x * y,
+    ap(len).map(x => 0.0004 * x).map(x => Math.exp(-x)),
+    a.slice(0, len)
+  ).map(x => Math.floor(x * d) / d)
 }
 {
-  //loopContinuum 990.19 4 [1,2] [3,4] [99..] (randomFloats 99 99)
-  // console.log('loopContinuum', loopContinuum(0.1, 4, [1, 2], [3, 4], randomInts('lol1', 9), randomFloats('lol2', 9)))
-  // console.log('randomFloatContinuum of large duration', randomFloatContinuum(0.1, 4200, 2, 'lol seed')) //around 4200 is the limit for loopContinuum with loopLength 2
-  // console.log('chainContinuumDrum', chainContinuumDrum('lol', 0.1))
+  // console.log(goodsnare().slice(0, 99))
 }
-//the capabilities of loopContinuum are slim, might need to use an ffi for another programming language to do the job of calculating long lists
-function multiContinuumDrum0(seed, randomness0) {
-  let overallDuration = 32 * 111//* 999
-
-  let loopLength = i => 2 ** i
-  let randomness = i => randomness0
-  let density = 0.9
-
-  let drumBeat1 = i =>
-    concatLists(
-      ap(Math.ceil(loopLength(i) / 32))
-        .map(j => makeDrumBeat(seed + i + 'asdjh' + j, density, randomness(i)))
-    ).slice(0, loopLength(i))
-  // return drumBeat1(4)
-  let drumBeat2 = i =>
-    concatLists(
-      ap(Math.ceil(loopLength(i) / 32))
-        .map(j => makeDrumBeat(seed + i + 'asdlk' + j, density, randomness(i)))
-    ).slice(0, loopLength(i))
-
-  let duration = i => Math.floor(overallDuration / (2 ** i))
-
-  let len = overallDuration
-  let continuum = i => loopContinuum(randomness(i), duration(i), drumBeat1(i), drumBeat2(i), randomInts(0, drumFiles.length, seed + 'asdfa' + i, len), randomFloats(seed + 'asdlkj', len))
-  return continuum(0)
-
-  // return zipWith((l,i) => l[i],zipLists(continuums),choiceSequence)
-}
-let multiContinuumDrum = multiContinuumDrum0(0, 0.1)
-{
-  console.log('multiContinuumDrum', multiContinuumDrum)
-}
-
-/*
-:{
-chainContinuumDrum seed = chainContinuumDrum' seed 0.1
-chainContinuumDrum' seed randomness' = continuum 1--maxAmount
-  where
-    overallDuration = 9999
-    randomness = randomness'--0.1 --controls how random the generated drum beats are
-    randomness2 = 0.5 --controls how much to emphasize from previous layer
-    --layer amount
-    maxAmount = floor $ logBase 2 $ 128
-
-    drumBeat1 i = take (2^i) $ concat $ map (\j -> makeDrumBeat (((seed*maxAmount+i)*2)*8+j) randomness) [0..]
-    drumBeat2 i = take (2^i) $ concat $ map (\j -> makeDrumBeat (((seed*maxAmount+i)*2+1)*8+j) randomness) [0..]
-
-    continuum 0 = take overallDuration $ randomInts 0 (length drumNumerals) seed
-
-    continuum i =
-      trace (show (
-        drumBeat1 i,
-        drumBeat2 i,
-        length $ continuum $ i-1))
-      $ loopContinuum randomness2 (div overallDuration (2^i)) (drumBeat1 i) (drumBeat2 i) (continuum $ i-1) (randomFloats2 $ seed*maxAmount+i)
-:}
-length $ chainContinuumDrum 0
-
-*/
-
-
-//if I pick a numeric seed, it might fuck some seed stuff up by introducing same seeds for different parts, but that might just be a feature rather than a bug
 
 export default {
   arithmeticProgression,
@@ -429,10 +310,11 @@ export default {
   shuffle,
   zip,
   zipWith,
+  zipLists,
   cycle,
+  cumulate,
   concatLists,
-  makeDrumBeat,
-  randomFloatContinuum,
-  randomIntContinuum,
-  chainContinuumDrum
+  concatStrings,
+  intercalateStrings,
+  logBase
 }

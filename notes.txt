@@ -1,3 +1,8 @@
+now, I could make the audio run on any programming framework capable of playing samples and editing files or executing shell commands, since I can generate effects with ffmpeg
+
+
+
+
 I could instead try electron
 
 now how would I play a score?

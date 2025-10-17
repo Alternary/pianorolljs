@@ -23,6 +23,7 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "interactjs": "^1.10.27",
+    "node-fetch": "^3.3.2",
     "nodemon": "^3.1.10",
     "rand-seed": "^3.0.0",
     "react": "^19.1.1",

@@ -7,7 +7,9 @@ import interact from 'interactjs'
 import axios from 'axios'
 import seedrandom from 'seedrandom'
 import utils from './utils.js'
+import musicUtils from './musicUtils.js'
 import musicPlaying from './musicPlaying.js'
+import effex from './effex.js'
 
 class SimpleGainWorklet {
   constructor() {
@@ -541,6 +543,9 @@ document.addEventListener('keydown', (event) => {
       break
     case 'w':
       musicPlaying.tweakGain(sendGainToSimpleGainWorklet)
+      break
+    case 'e':
+      effex.f()
       break
   }
 })

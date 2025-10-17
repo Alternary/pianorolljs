@@ -1,0 +1,60 @@
+pruned from lv2_on_my_system_parametrized2.txt
+
+segfaults unless where noted:
+1
+2
+3
+51
+54
+56
+57
+58
+59
+60
+61
+62
+64
+134 invalid plugin uri
+144 invalid plugin uri
+149 invalid plugin uri
+168-171 invalid plugin uri
+177
+182
+183
+187-193
+241-244
+251-253
+256
+258-260 invalid
+261 hangs
+266-267 hangs
+279-280 hangs
+283-285 aborted
+288-289 aborted
+292
+305-306
+313 invalid
+315-317
+322-323
+326-328
+332-334
+337 i
+340 i
+341-343
+366
+367
+368 i
+369 i
+375
+379 i
+382
+387 aborted
+401 i
+402 i
+407 i
+411 i
+414 i
+419
+429-436
+448-452
+465-471

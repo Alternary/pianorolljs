@@ -1,8 +1,9 @@
 import utils from './utils.js'
+import musicUtils from './musicUtils.js'
 import axios from 'axios'
 
 function tweakGain(sendGainToSimpleGainWorklet) {
-  sendGainToSimpleGainWorklet(Math.random()+0.5)
+  sendGainToSimpleGainWorklet(Math.random() + 0.5)
 }
 
 async function playEffect(toggleSimpleGainWorklet) {
@@ -159,6 +160,10 @@ let bassSamples = Array.from(Array(80).keys())
 // + '.mp3')
 // console.log('bassSamples', bassSamples)
 // console.log(bassSamples[0])
+
+
+
+//songs
 let drumPattern
 let bassPattern
 let skip = 0//2000
@@ -181,7 +186,7 @@ fetch('./bassPattern.json')
     console.log(bassPattern)
   })
 async function playDrumPattern() {
-  drumPatternNumbers = utils.cycle(utils.makeDrumBeat('seed lol', 0.9, 0.1), 99)
+  // drumPatternNumbers = utils.cycle(musicUtils.makeDrumBeat('seed lol', 0.9, 0.1), 99)
   console.log(drumPatternNumbers.slice(0, 32))
   drumPattern = drumPatternNumbers.map(i => drumFiles[i])
   // console.log(3)
@@ -271,11 +276,6 @@ async function playMelody() {
     .map(i => './samples/ambient_sines/ambient_sine' + i + '.mp3')
   for (let i in melodyStrings) {
     let s = melodyStrings[i]
-    // melodyAudio = new Audio(s)
-    // melodyAudio.playbackRate = (1 + Math.random()) / 2
-    // melodyAudio.preservesPitch = false
-    // melodyAudio.volume = 0.02
-    // melodyAudio.play()
     playSample(s, 15, 0, 0.04, Math.random() * 2 - 1, (1 + Math.random()) / 2)
     // await utils.sleep(baseTempo * utils.sigmoid(Math.random(), 4) * 2)
     await utils.sleep(Math.random() * 299)
@@ -298,7 +298,7 @@ async function playSamplePattern() {
 
   let baseTempo = 199//90//330
 
-  bassPatternNumbers = utils.randomIntContinuum(0, bassSamples.length, 0.05, 999, 32, 'lol')
+  bassPatternNumbers = musicUtils.randomIntContinuum(0, bassSamples.length, 0.05, 999, 32, 'lol')
   function snapToScale(i, scale) {
     return utils.concatLists(utils.ap(9).map(octave => scale.map(i => i + octave * 12))).find(j => j >= i)
   }
@@ -310,14 +310,14 @@ async function playSamplePattern() {
         ? wonkyScales[i]
         : chromatic
   ))
-  let bassSilences = utils.randomFloatContinuum(0.1, 999, 32, 'lol')
+  let bassSilences = musicUtils.randomFloatContinuum(0.1, 999, 32, 'lol')
   bassPatternNumbers = utils.zipWith((r, i) => r < 0.3 ? 0 : i, bassSilences, bassPatternNumbers)
   bassPattern = bassPatternNumbers.map(i => bassSamples[i])
 
   for (let i in samplePatternNumbers) {
     // console.log(bassPatternNumbers[i])
     let bassString = bassPattern[i]
-    playSample(bassString, 2, Math.random() ** 2, 0.15, Math.sign(Math.random() - 0.5) * Math.random() ** 4.5, 1 + 0.003 * Math.random() * 2)
+    playSample(bassString, 2, Math.random() ** 2, 0.2, Math.sign(Math.random() - 0.5) * Math.random() ** 4.5, 1 + 0.003 * Math.random() * 2)
 
     let sampleDurationPair = sampleDurationPairs[samplePatternNumbers[i]]
     let drumSampleDurationPair = drumSampleDurationPairs[drumPatternNumbers[i]]
@@ -422,5 +422,7 @@ export default {
   playDrumPattern,
   playMelody,
   playSamplePattern,
-  playSampleLoopingly
+  playSample,
+  playSampleLoopingly,
+  playSampleLoopinglyAtOffset
 }

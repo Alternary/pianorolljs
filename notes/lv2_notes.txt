@@ -1,0 +1,57 @@
+okay, now test ffmpeg
+I would like to do ffmpegs in parallel
+
+naming convention
+bassdrum3_comb_..._.mp3
+
+ladspa seems not to work, but that is not too bad, since lv2 still works
+
+ffplay -volume 22 ~/Audios/I/bassdrum.mp3 -af "lv2=p=http\\\\://calf.sourceforge.net/plugins/BassEnhancer:c=amount=2"
+
+ffplay -volume 22 ~/Audios/I/bassdrum.mp3 -af "lv2=p=http\\\\://calf.sourceforge.net/plugins/Reverb"
+
+lv2s:
+effex2
+lv2s_parametrized
+
+const data = require('./lv2s_uris_all_from_github.json')
+const { execSync } = await import('child_process')
+let exec = command => execSync(command, {encoding: 'utf-8'})
+data.slice(0,2).forEach(uri => console.log(exec('echo '+uri)))
+data.slice(0,2).map(uri => uri.replace(':','\\\\\\\\\\\\\\\\\\\\\\\\\\\\:')).forEach(uri => console.log(exec('echo '+uri)))
+data.slice(0,1).map(uri => uri.replace(':','\\\\\\\\\\\\\\\\\\\\\\\\\\\\:')).map(uri2 => 'ffplay -volume 22 ~/Audios/I/bassdrum.mp3 -af \\"lv2=' + uri2 + '\\"').forEach(uri => console.log(exec('echo '+uri)))
+
+
+ffplay -volume 22 ~/Audios/I/bassdrum.mp3 -af "lv2=http\\\\://calf.sourceforge.net/plugins/BassEnhancer:c='bypass=00.5|level_in=064.0|level_out=095.99219|amount=0128.0|drive=024.85|blend=050.0|freq=0850.0|listen=04.0'"
+
+problem, some effects are no longer found
+redo effect finding
+
+USE THIS SCRIPT TO GET NAMES OF PARAMETERS
+script -c "ffplay -volume 0 ~/Audios/I/bassdrum.mp3 -af \"lv2=c=help:p='http\\://drobilla.net/plugins/mda/Vocoder'\"" |grep -v "plugin has the " |grep -v "Failed to" |grep "\] "
+ffplay -volume 0 ~/Audios/I/bassdrum.mp3 -af "lv2=c=help:p='http\\://drobilla.net/plugins/mda/Vocoder'"
+
+script -c "ffplay -volume 0 ~/Audios/I/bassdrum.mp3 -af \"lv2=c=help:p='http\\://drobilla.net/plugins/mda/Vocoder'\"" |grep -v "plugin has the " |grep -v "Failed to" |grep -o "\] .*" |sed "s/\]\ //g" |sed "s/		<float/\ ;\ <float/g" |sed "s/		.*//g" |sed "s/)\ (default\ /,/g" |sed "s/\ ;\ <float>\ (from\ /;/g" |sed "s/\ to\ /,/g" |sed "s/)//g"
+
+cat lv2s_uris_all_from_github.json |grep -o "\".*" |sed "s/\"//g" |sed "s/,//g"
+for uri in $(cat lv2s_uris_all_from_github.json |grep -o "\".*" |sed "s/\"//g" |sed "s/,//g") ; do echo $uri ; done
+function f { for uri in $(cat lv2s_uris_all_from_github.json |grep -o "\".*" |sed "s/\"//g" |sed "s/,//g" |sed "s/:/\\\\\\\\:/g" |head -$1 |tail -1) ; do ffplay -volume 0 -nodisp -autoexit ~/Audios/I/bassdrum.mp3 -af lv2=$(echo $uri) ; done ; } ; f 2
+function f { for uri in $(cat lv2s_uris_all_from_github.json |grep -o "\".*" |sed "s/\"//g" |sed "s/,//g" |sed "s/:/\\\\\\\\\\\\\\\\:/g" |head -$1 |tail -1) ; do script -c "ffplay -volume 0 -nodisp -autoexit ~/Audios/I/bassdrum.mp3 -af lv2=c=help:p=$(echo $uri)" |grep -v "Failed to" |grep -o "\] .*" |sed "s/\]\ //g" |sed "s/		<float/\ ;\ <float/g" |sed "s/		.*//g" |sed "s/)\ (default\ /,/g" |sed "s/\ ;\ <float>\ (from\ /;/g" |sed "s/\ to\ /,/g" |sed "s/)//g" ; done ; } ; f 11
+function f { for uri in $(cat lv2s_uris_all_from_github.json |grep -o "\".*" |sed "s/\"//g" |sed "s/,//g" |sed "s/:/\\\\\\\\\\\\\\\\:/g" |head -$1 |tail -1) ; do script -c "ffplay -volume 0 -nodisp -autoexit ~/Audios/I/bassdrum.mp3 -af lv2=c=help:p=$(echo $uri)" |grep "Parsed.*Failed to" ; echo $uri ; done ; } ; for i in $(seq 1 1211) ; do f $i ; done
+function f { for uri in $(cat lv2s_uris_all_from_github.json |grep -o "\".*" |sed "s/\"//g" |sed "s/,//g" |sed "s/:/\\\\\\\\\\\\\\\\:/g" |head -$1 |tail -1) ; do if [[ $(script -c "ffplay -volume 0 -nodisp -autoexit ~/Audios/I/bassdrum.mp3 -af lv2=c=help:p=$(echo $uri)" |grep "Parsed.*Failed to" ) == "" ]] ; then true; else echo $uri; fi ; done ; } ; for i in $(seq 1 1211) ; do f $i ; done
+
+what do now?
+try with some parametrization
+some fail with segmentation fault
+
+ffplay -volume 22 ~/Audios/I/bassdrum.mp3 -af "lv2=p=http\\\\://au.tomatl.org/essp:c=lv2_freewheel=0"
+for line in $(cat lv2_on_my_system_parametrized2.txt |head -1) ; do echo $line |grep -o ".*\",\[\"" |grep -o "[uh].*\"" |sed "s/\",\[\"//g" ; done
+function f { for line in $(cat lv2_on_my_system_parametrized2.txt |head -$1 |tail -1) ; do x=$(echo $line |grep -o ".*\",\[\"" |grep -o "[uh].*\"" |sed "s/\",\[\"//g" |sed "s/:/\\\\\\\\:/g") ; ffplay -volume 22 ~/Audios/I/bassdrum.mp3 -af "lv2=p=$x" ; done ; } ; f 1
+function f { for line in $(cat lv2_on_my_system_parametrized2.txt |head -$1 |tail -1) ; do x=$(echo $line |grep -o ".*\",\[\"" |grep -o "[uh].*\"" |sed "s/\",\[\"//g" |sed "s/:/\\\\\\\\:/g") ; ffplay -nodisp -autoexit -volume 22 ~/Audios/I/bassdrum.mp3 -af "lv2=p=$x" ; done ; } ; for i in $(seq 1 471) ; do f $i ; echo $i ; read -p "next" ; done
+
+then what?
+I can either do parametrization or playing samples
+first playing of samples, through generating with ffmpeg
+
+send backend command to generate sample
+if sample exists, use existing sample and don't simply overwrite existing one
