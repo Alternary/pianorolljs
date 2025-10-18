@@ -1,5 +1,9 @@
 import utils from './utils.js'
 
+function snapToScale(i, scale) {
+  return utils.concatLists(utils.ap(9).map(octave => scale.map(i => i + octave * 12))).find(j => j >= i)
+}
+
 let drumFiles = [
   "silence.mp3", //silence
   "bassdrum3.mp3",
@@ -273,6 +277,7 @@ length $ chainContinuumDrum 0
 //if I pick a numeric seed, it might fuck some seed stuff up by introducing same seeds for different parts, but that might just be a feature rather than a bug
 
 export default {
+  snapToScale,
   drumFiles,
   makeDrumBeat,
   randomFloatContinuum,

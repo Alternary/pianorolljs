@@ -1,3 +1,5 @@
+//what I could do is send to worklet node a list of data
+
 //utils
 const arithmeticProgression = n => Array.from(Array(n)).map((x, i) => i)
 const ap = arithmeticProgression

@@ -8,8 +8,10 @@ import axios from 'axios'
 import seedrandom from 'seedrandom'
 import utils from './utils.js'
 import musicUtils from './musicUtils.js'
-import musicPlaying from './musicPlaying.js'
+// import musicPlaying from './musicPlaying.js'
 import effex from './effex.js'
+import songs from './songs.js'
+import samplePlaying from './samplePlaying.js'
 
 class SimpleGainWorklet {
   constructor() {
@@ -119,9 +121,11 @@ class SimpleGainWorklet {
 }
 
 let simpleGainWorklet
+let simpleGainWorklet2
 // Initialize when page loads
 window.addEventListener('load', () => {
   simpleGainWorklet = new SimpleGainWorklet();
+  simpleGainWorklet2 = new SimpleGainWorklet();
 });
 
 function toggleSimpleGainWorklet() {
@@ -129,6 +133,13 @@ function toggleSimpleGainWorklet() {
 }
 function sendGainToSimpleGainWorklet(gain) {
   simpleGainWorklet.sendGain(gain)
+  simpleGainWorklet2.toggleAudio()
+}
+async function createAndPlayWorkletForTime(parameter, time) {
+  let worklet = new SimpleGainWorklet()
+  worklet.sendGain(parameter)
+  await utils.sleep(time)
+  worklet.toggleAudio()
 }
 
 /*import { app, BrowserWindow } from 'electron'
@@ -472,7 +483,7 @@ let audio
 const vzooms = [1 / 4, 1]
 const hzooms = [1 / (4 * 4 * 4 * 9), 1 / (4 * 4 * 4), 1 / (4 * 4), 1 / 4, 1, 4, 4 * 4]
 let instructions = document.getElementById('instructions')
-instructions.innerHTML = '<b>enter adds note, a logs notes, ijkl zoom, s resets zoom, 1234567890 play samples, d plays drum pattern, g plays melody, h plays general samples, q plays effects</b>'
+instructions.innerHTML = "<b>enter adds note, a logs notes, ijkl zoom, s resets zoom, 1234567890 play samples, d plays drum pattern, g plays melody, h plays general samples, q plays effects, w changes q's parameter, e plays effected sample, r plays ambience</b>"
 document.addEventListener('keydown', (event) => {
   switch (event.key) {
     case 'Enter':
@@ -528,24 +539,27 @@ document.addEventListener('keydown', (event) => {
       audio = new Audio(musicPlaying.drumFiles[9]); audio.volume = 0.2; audio.play(); break
     case 'd':
       console.log(2)
-      musicPlaying.playDrumPattern()
+      songs.playDrumPattern()
       break
     case 'f':
       break
     case 'g':
-      musicPlaying.playMelody()
+      songs.playMelody()
       break
     case 'h':
-      musicPlaying.playSamplePattern()
+      songs.playSamplePattern()
       break
     case 'q':
-      musicPlaying.playEffect(toggleSimpleGainWorklet)
+      samplePlaying.playEffect(toggleSimpleGainWorklet)
       break
     case 'w':
-      musicPlaying.tweakGain(sendGainToSimpleGainWorklet)
+      samplePlaying.tweakGain(sendGainToSimpleGainWorklet)
       break
     case 'e':
       effex.f()
+      break
+    case 'r':
+      songs.playAmbience()
       break
   }
 })
@@ -558,7 +572,7 @@ document.addEventListener('keyup', (event) => {
     console.log(2)
     // playSweep(0)
     // playSample('./samples/drums/bassdrum.mp3')
-    musicPlaying.playSampleLoopingly('./samples/drums/goodsnare.mp3', times, duration)
+    samplePlaying.playSampleLoopingly('./samples/drums/goodsnare.mp3', times, duration)
     // setTimeout(() => playSample('./samples/drums/bassdrum.mp3'), 100)
   }
 })
