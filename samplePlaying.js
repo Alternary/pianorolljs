@@ -53,7 +53,7 @@ async function playSample(samplePath, duration, offset = 0, gain = 0.1, pan = 0,
     source.buffer = audioBuffer;
     // source.loop = true
     const gainNode = audioContext3.createGain();
-    gainNode.gain.value = gain; // Set volume (0.0 to 1.0)
+    gainNode.gain.value = gain * 0.35; // Set volume (0.0 to 1.0)
     const stereoPannerNode = audioContext3.createStereoPanner()
     // console.log('in playSample, here is sample and its pan', samplePath, pan)
     // console.log('here is its rate', rate)

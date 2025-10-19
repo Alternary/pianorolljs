@@ -1,5 +1,18 @@
 import utils from './utils.js'
 
+let major = [0, 2, 4, 5, 7, 9, 11]
+let pentatonic = [0, 2, 5, 7, 9]
+let chromatic = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+// let wonkyScale = [0, 3, 4, 6, 8, 9, 10]
+let wonkySeed = 'lol'
+let seedRandom = utils.seedRandom(wonkySeed)
+let wonkyScales = utils.arithmeticProgression(999).map(i => {
+  let wonkyScale = utils.arithmeticProgression(Math.floor(seedRandom() * 12))
+    .map(j => Math.floor(seedRandom() * 12))
+  return wonkyScale
+})
+console.log('wonk', wonkyScales[0])
+
 function snapToScale(i, scale) {
   return utils.concatLists(utils.ap(9).map(octave => scale.map(i => i + octave * 12))).find(j => j >= i)
 }
@@ -277,6 +290,10 @@ length $ chainContinuumDrum 0
 //if I pick a numeric seed, it might fuck some seed stuff up by introducing same seeds for different parts, but that might just be a feature rather than a bug
 
 export default {
+  major,
+  pentatonic,
+  wonkyScales,
+  chromatic,
   snapToScale,
   drumFiles,
   makeDrumBeat,

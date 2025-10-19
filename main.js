@@ -483,7 +483,7 @@ let audio
 const vzooms = [1 / 4, 1]
 const hzooms = [1 / (4 * 4 * 4 * 9), 1 / (4 * 4 * 4), 1 / (4 * 4), 1 / 4, 1, 4, 4 * 4]
 let instructions = document.getElementById('instructions')
-instructions.innerHTML = "<b>enter adds note, a logs notes, ijkl zoom, s resets zoom, 1234567890 play samples, d plays drum pattern, g plays melody, h plays general samples, q plays effects, w changes q's parameter, e plays effected sample, r plays ambience</b>"
+instructions.innerHTML = "<b>enter adds note, a logs notes, ijkl zoom, s resets zoom, 1234567890 play samples, d plays drum pattern, g plays melody, h plays general samples, q plays effects, w changes q's parameter, e plays effected sample, r plays ambience, t plays sampleSong2, y plays chordSong</b>"
 document.addEventListener('keydown', (event) => {
   switch (event.key) {
     case 'Enter':
@@ -518,25 +518,25 @@ document.addEventListener('keydown', (event) => {
       applyZoom()
       break
     case '1':
-      audio = new Audio(musicPlaying.drumFiles[0]); audio.volume = 0.2; audio.play(); break
+      audio = new Audio(musicUtils.drumFiles[0]); audio.volume = 0.2; audio.play(); break
     case '2':
-      audio = new Audio(musicPlaying.drumFiles[1]); audio.volume = 0.2; audio.play(); break
+      audio = new Audio(musicUtils.drumFiles[1]); audio.volume = 0.2; audio.play(); break
     case '3':
-      audio = new Audio(musicPlaying.drumFiles[2]); audio.volume = 0.2; audio.play(); break
+      audio = new Audio(musicUtils.drumFiles[2]); audio.volume = 0.2; audio.play(); break
     case '4':
-      audio = new Audio(musicPlaying.drumFiles[3]); audio.volume = 0.2; audio.play(); break
+      audio = new Audio(musicUtils.drumFiles[3]); audio.volume = 0.2; audio.play(); break
     case '5':
-      audio = new Audio(musicPlaying.drumFiles[4]); audio.volume = 0.2; audio.play(); break
+      audio = new Audio(musicUtils.drumFiles[4]); audio.volume = 0.2; audio.play(); break
     case '6':
-      audio = new Audio(musicPlaying.drumFiles[5]); audio.volume = 0.2; audio.play(); break
+      audio = new Audio(musicUtils.drumFiles[5]); audio.volume = 0.2; audio.play(); break
     case '7':
-      audio = new Audio(musicPlaying.drumFiles[6]); audio.volume = 0.2; audio.play(); break
+      audio = new Audio(musicUtils.drumFiles[6]); audio.volume = 0.2; audio.play(); break
     case '8':
-      audio = new Audio(musicPlaying.drumFiles[7]); audio.volume = 0.2; audio.play(); break
+      audio = new Audio(musicUtils.drumFiles[7]); audio.volume = 0.2; audio.play(); break
     case '9':
-      audio = new Audio(musicPlaying.drumFiles[8]); audio.volume = 0.2; audio.play(); break
+      audio = new Audio(musicUtils.drumFiles[8]); audio.volume = 0.2; audio.play(); break
     case '0':
-      audio = new Audio(musicPlaying.drumFiles[9]); audio.volume = 0.2; audio.play(); break
+      audio = new Audio(musicUtils.drumFiles[9]); audio.volume = 0.2; audio.play(); break
     case 'd':
       console.log(2)
       songs.playDrumPattern()
@@ -561,18 +561,24 @@ document.addEventListener('keydown', (event) => {
     case 'r':
       songs.playAmbience()
       break
+    case 't':
+      songs.playSampleSong2()
+      break
+    case 'y':
+      songs.playChordSong()
+      break
   }
 })
 
-document.addEventListener('keyup', (event) => {
-  let drillTime = 0.3
-  let duration = 0.02
-  let times = drillTime / duration
-  if (event.key == 'f') {
-    console.log(2)
-    // playSweep(0)
-    // playSample('./samples/drums/bassdrum.mp3')
-    samplePlaying.playSampleLoopingly('./samples/drums/goodsnare.mp3', times, duration)
-    // setTimeout(() => playSample('./samples/drums/bassdrum.mp3'), 100)
-  }
-})
+// document.addEventListener('keyup', (event) => {
+//   let drillTime = 0.3
+//   let duration = 0.02
+//   let times = drillTime / duration
+//   if (event.key == 'f') {
+//     console.log(2)
+//     // playSweep(0)
+//     // playSample('./samples/drums/bassdrum.mp3')
+//     samplePlaying.playSampleLoopingly('./samples/drums/goodsnare.mp3', times, duration)
+//     // setTimeout(() => playSample('./samples/drums/bassdrum.mp3'), 100)
+//   }
+// })

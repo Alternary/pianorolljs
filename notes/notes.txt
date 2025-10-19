@@ -41,3 +41,6 @@ but for now, I might really only need a piano roll editor for tones and using wi
 
 also I want to record on that piano roll
 playing back notes as keys are pressed has latency, so I might instead use pure data to record notes and then convert into json for the javascript client
+
+
+generate a bunch of samples and then play them back as percussions, also apply effects to others' samples

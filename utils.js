@@ -28,6 +28,7 @@ function mod(n, m) { return ((n % m) + m) % m }
 {
   // console.log('mod',mod(-9, 4))
 }
+let seedRandom = seed => seedrandom(seed)
 function randomFloat(seed) { return seedrandom(seed)() }
 function randomFloats(seed, length) {
   let seedRandom = seedrandom(seed)
@@ -303,6 +304,7 @@ export default {
   sleep,
   groupBy,
   mod,
+  seedRandom,
   randomFloat,
   randomFloats,
   randomInt,
@@ -316,5 +318,6 @@ export default {
   concatLists,
   concatStrings,
   intercalateStrings,
+  weird4,
   logBase
 }
