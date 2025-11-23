@@ -44,3 +44,9 @@ playing back notes as keys are pressed has latency, so I might instead use pure 
 
 
 generate a bunch of samples and then play them back as percussions, also apply effects to others' samples
+
+
+I can do real time audio synthesis with javascript
+actually, into utils I should place the simple-gain-worklet, or, rather, place utils into.
+now, that's really all that I need
+although, I would also like to use the worklet to apply real time manipulations to samples

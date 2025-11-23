@@ -11,6 +11,7 @@ import musicUtils from './musicUtils.js'
 // import musicPlaying from './musicPlaying.js'
 import effex from './effex.js'
 import songs from './songs.js'
+import songs2 from './songs2.js'
 import samplePlaying from './samplePlaying.js'
 
 class SimpleGainWorklet {
@@ -483,7 +484,7 @@ let audio
 const vzooms = [1 / 4, 1]
 const hzooms = [1 / (4 * 4 * 4 * 9), 1 / (4 * 4 * 4), 1 / (4 * 4), 1 / 4, 1, 4, 4 * 4]
 let instructions = document.getElementById('instructions')
-instructions.innerHTML = "<b>enter adds note, a logs notes, ijkl zoom, s resets zoom, 1234567890 play samples, d plays drum pattern, g plays melody, h plays general samples, q plays effects, w changes q's parameter, e plays effected sample, r plays ambience, t plays sampleSong2, y plays chordSong</b>"
+instructions.innerHTML = "<b>enter adds note, a logs notes, ijkl zoom, s resets zoom, 1234567890 play samples, d plays drum pattern, g plays melody, h plays sample pattern, q plays effects, w changes q's parameter, e plays effected sample, r plays ambience, t plays sampleSong2, y plays chordSong, u plays chordy sample song</b>"
 document.addEventListener('keydown', (event) => {
   switch (event.key) {
     case 'Enter':
@@ -566,6 +567,9 @@ document.addEventListener('keydown', (event) => {
       break
     case 'y':
       songs.playChordSong()
+      break
+    case 'u':
+      songs.playChordySampleSong()
       break
   }
 })

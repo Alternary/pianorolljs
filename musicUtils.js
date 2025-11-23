@@ -17,6 +17,28 @@ function snapToScale(i, scale) {
   return utils.concatLists(utils.ap(9).map(octave => scale.map(i => i + octave * 12))).find(j => j >= i)
 }
 
+//this is just akin to random bits isn't it?
+function generateAlternation(seed, len) {
+  let zeros = 0
+  let ones = 0
+  let sequence = []
+  let rs = utils.randomFloats(seed, len)
+  for (let i = 0; i < len; i++) {
+    let bit = rs[i] < zeros / Math.max(1, ones)
+      ? 1
+      : 0
+    if (bit == 0) {
+      zeros += 1
+    }
+    else {
+      ones += 1
+    }
+    sequence.push(bit)
+  }
+  return sequence
+}
+// console.log(generateAlternation('lol', 9))
+
 let drumFiles = [
   "silence.mp3", //silence
   "bassdrum3.mp3",
@@ -228,7 +250,7 @@ let chainContinuumDrum = (seed, randomness0) => {
 }
 //the capabilities of loopContinuum are slim, might need to use an ffi for another programming language to do the job of calculating long lists
 function multiContinuumDrum0(seed, randomness0) {
-  let overallDuration = 32 * 111//* 999
+  let overallDuration = 16 * 111//32 * 111//* 999
 
   let loopLength = i => 2 ** i
   let randomness = i => randomness0
@@ -245,6 +267,7 @@ function multiContinuumDrum0(seed, randomness0) {
       utils.ap(Math.ceil(loopLength(i) / 32))
         .map(j => makeDrumBeat(seed + i + 'asdlk' + j, density, randomness(i)))
     ).slice(0, loopLength(i))
+  console.log('drumBeat1(6)', drumBeat1(6))
 
   let duration = i => Math.floor(overallDuration / (2 ** i))
 
@@ -257,6 +280,10 @@ function multiContinuumDrum0(seed, randomness0) {
 let multiContinuumDrum = multiContinuumDrum0(0, 0.1)
 {
   console.log('multiContinuumDrum', multiContinuumDrum)
+  console.log('multiContinuumDrum', multiContinuumDrum0(1, 0.1))
+  console.log('multiContinuumDrum', multiContinuumDrum0(2, 0.1))
+  console.log('multiContinuumDrum', multiContinuumDrum0(3, 0.1))
+  console.log('multiContinuumDrum', multiContinuumDrum0(4, 0.1))
 }
 
 /*

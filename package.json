@@ -9,7 +9,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "backend": "nodemon backend.js",
+    "backend": "nodemon --ignore 'patterns/*' backend.js",
+    "frontend": "vite",
     "start-electron": "electron ."
   },
   "dependencies": {
@@ -21,9 +22,12 @@
     "audio-effects": "^1.2.4",
     "axios": "^1.12.2",
     "cors": "^2.8.5",
+    "eol": "^0.10.0",
     "express": "^5.1.0",
+    "file-fetch": "^2.0.1",
     "interactjs": "^1.10.27",
     "node-fetch": "^3.3.2",
+    "node-web-audio-api": "^1.0.7",
     "nodemon": "^3.1.10",
     "rand-seed": "^3.0.0",
     "react": "^19.1.1",

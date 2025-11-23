@@ -296,6 +296,10 @@ function goodsnare() {
   // console.log(goodsnare().slice(0, 99))
 }
 
+function ifThenReturn(condition, thenReturn, elseReturn) {
+  return condition ? thenReturn : elseReturn
+}
+
 export default {
   arithmeticProgression,
   ap,
@@ -319,5 +323,6 @@ export default {
   concatStrings,
   intercalateStrings,
   weird4,
-  logBase
+  logBase,
+  ifThenReturn
 }
