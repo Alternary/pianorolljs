@@ -314,13 +314,15 @@ length $ chainContinuumDrum 0
 */
 
 
+//partitioning stuff
+
 // const { default: utils } = await import('./utils.js')
 function listPartitionedByRelativeAmounts(l, relativeAmounts, seed) {
   let totalRelativeAmounts = utils.sum(relativeAmounts)
   let relativeAmountPercentages = relativeAmounts.map(i => i / totalRelativeAmounts)
   let cumulatedRelativeAmountPercentages = utils.cumulate(relativeAmountPercentages)
   cumulatedRelativeAmountPercentages[cumulatedRelativeAmountPercentages.length - 1] = 1 / 0
-  console.log(cumulatedRelativeAmountPercentages)
+  // console.log(cumulatedRelativeAmountPercentages)
   function partitionNumberAssigner0(i, l0) {
     // console.log('here is i', i)
     // console.log('here is l0', l0)
@@ -339,6 +341,41 @@ function listPartitionedByRelativeAmounts(l, relativeAmounts, seed) {
 // listPartitionedByRelativeAmounts(utils.ap(5),[2,4,4],'a')
 console.log('list partitioned by relative amounts', listPartitionedByRelativeAmounts([1, 2, 3, 4, 5], [2, 5, 3], 'a'))
 
+function mapDrumPatternToDrumPartitions(drumPattern, relativeAmounts, seed) {
+  let itemPartitionNumberPairs = listPartitionedByRelativeAmounts(utils.ap(33), relativeAmounts, seed)
+  //mapper maps an int from 0 to 33 to a corresponding partitionNumber
+  function mapper(x00) {
+    let x0 = utils.mod(x00, 33)
+    //find the index of [x,partitionNumber] in itemPartitionNumberPairs and return partitionNumber
+    let itemPartitionNumberPair = itemPartitionNumberPairs.find(pair => pair[0] == x0)
+    let partitionNumber0 = itemPartitionNumberPair[1]
+    return partitionNumber0
+  }
+  let partitionNumber = x => x < 4 ? x : (x == 4 ? 3 : mapper(utils.mod(x - 4, 33)))
+  return drumPattern.map(partitionNumber)
+}
+{
+  let testSeed = 'a'
+  let testDrumPattern = utils.ap(33 + 4)//[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  let testRelativeAmounts = [20, 20, 20, 20, 20]
+  console.log('map drum pattern to drum partitions', mapDrumPatternToDrumPartitions(testDrumPattern, testRelativeAmounts, testSeed))
+}
+let drumFilesPartitioned = [[0], [1, 7, 9, 15, 19, 20, 21, 22, 23, 24, 25, 32, 34, 38], [2, 5, 6, 8, 17, 27, 30, 37, 40, 47], [3, 4, 14, 41, 49], [10, 11, 12, 13, 16, 18, 26, 28, 29, 31, 33, 35, 36, 39, 42, 43, 44, 45, 46, 48, 50, 51, 52, 53, 54]]
+function departitionDrumPartitionPattern(partitionPattern, intraPartitionFloats) {
+  return partitionPattern.map((partitionNumber, i) => {
+    let drumPartition = drumFilesPartitioned[partitionNumber]
+    let intraPartitionNumber = utils.snapFloatToRange(intraPartitionFloats[i], 0, drumPartition.length - 1)
+    let drumNumber = drumPartition[intraPartitionNumber]
+    return drumNumber
+  })
+}
+{
+  let partitionPattern = [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
+  let intraPartitionFloats = randomFloatContinuum(0.1, 99, 32, 'a')
+  console.log('departition drum partition pattern', departitionDrumPartitionPattern(partitionPattern, intraPartitionFloats))
+
+}
+
 //if I pick a numeric seed, it might fuck some seed stuff up by introducing same seeds for different parts, but that might just be a feature rather than a bug
 
 export default {
@@ -352,5 +389,7 @@ export default {
   randomFloatContinuum,
   randomIntContinuum,
   chainContinuumDrum,
-  listPartitionedByRelativeAmounts
+  listPartitionedByRelativeAmounts,
+  mapDrumPatternToDrumPartitions,
+  departitionDrumPartitionPattern
 }

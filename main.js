@@ -574,6 +574,9 @@ document.addEventListener('keydown', (event) => {
     case 'o':
       songs.testCommand()
       break
+    case 'p':
+      songs.playChordyPartitionedSampleSong()
+      break
   }
 })
 

@@ -308,6 +308,10 @@ function sortByNumber(l, f) {
   return l2.sort((a, b) => f(a) - f(b))
 }
 
+function snapFloatToRange(f, start, end) {
+  return start + Math.floor(f * (end + 1 - start))
+}
+
 export default {
   arithmeticProgression,
   ap,
@@ -334,5 +338,6 @@ export default {
   weird4,
   logBase,
   ifThenReturn,
-  sortByNumber
+  sortByNumber,
+  snapFloatToRange
 }
