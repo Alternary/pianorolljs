@@ -702,12 +702,15 @@ async function playChordyPartitionedSampleSong() {
   let drumPatternNumbersSilenced = utils.zipWith((i, r) => r < drumDensity ? i : 0, drumPatternNumbers, musicUtils.randomFloatContinuum(0.1, 999, 16, seed + 'xd'))
 
   //then do the combination of partitioning and departitioning
-  let relativeAmounts = [20, 20, 20, 20, 20]
+  let relativeAmounts = [0, 25, 25, 25, 25]
   let drumPartitionPattern = musicUtils.mapDrumPatternToDrumPartitions(drumPatternNumbers, relativeAmounts, seed)
   let intraPartitionFloats = musicUtils.randomFloatContinuum(0.1, 999, 32, seed)
   let postPartitionDepartitionDrumPattern = musicUtils.departitionDrumPartitionPattern(drumPartitionPattern, intraPartitionFloats)
+  console.log('here is post partition departition drum pattern', Math.max(...postPartitionDepartitionDrumPattern))
+  console.log('here is drum pattern numbers silenced max', Math.max(...drumPatternNumbersSilenced))
   drumPatternNumbersSilenced = postPartitionDepartitionDrumPattern
   console.log('silenceds', drumPatternNumbersSilenced)
+  // return
   const samplePatternNumbers = drumPatternNumbersSilenced.map(i => i % sampleDurationPairs.length)
 
   let drillingPattern = musicUtils.randomFloatContinuum(0.05, 999, 16, seed)
@@ -767,9 +770,11 @@ async function playChordyPartitionedSampleSong() {
 
     let sampleDurationPair = sampleDurationPairs[samplePatternNumbers[i]]
     let drumSampleDurationPair = drumSampleDurationPairs[drumPatternNumbersSilenced[i]]
+    drumSampleDurationPair = drumSampleDurationPair == undefined ? ['./samples/silence.mp3', 0] : drumSampleDurationPair
     // console.log(sampleDurationPair)
     let sample = sampleDurationPair[0]
     let drumSample = drumPatternNumbersSilenced[i] == 99 ? './samples/silence.mp3' : drumSampleDurationPair[0]
+    drumSample = drumSample == undefined ? './samples/silence.mp3' : drumSample
     // console.log('drum sample', drumSample)
     // console.log()
     let sampleDuration = sampleDurationPair[1]
