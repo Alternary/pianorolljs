@@ -1,0 +1,6 @@
+partition drum samples into:
+  bassdrums, snares, hats, rest
+
+generate the partitionPattern from drum beats, create a new makeDrumPartitionBeat and such
+or I could map the existing ones full drum beat generators to the four partitions
+with drumPartitionPattern in place, generate intraPartitionPattern by generating a floatPattern that you snap into the intraPartitionSamples

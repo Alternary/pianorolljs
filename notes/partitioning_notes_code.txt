@@ -1,0 +1,53 @@
+:{
+{-
+how do I map the existing drumPatterns into partitionPatterns?
+have a haskell function that maps each noteNumber into its corresponding partition
+the partitions will be
+0 bassdrums
+1 snares
+2 hats
+3 others
+4 silence
+
+I have generated drumPatterns with only 0,1,2,3 and 4 in mind, everything else being other
+I have an option here, generate any relative amounts of 0,1,2 and 3s
+so, map 1 to 0, 2 to 1, 3 and 4 to 2, then for from 5 onward, mod it by 33 and then map it to one of the partitions
+to randomly partition a list into lists with a particular relative size
+that is done by shuffling the list and partitioning it one by one
+have relative amounts as ints, from 100 for example
+then transform those ints into percentages
+totalRelativeAmounts = sum relativeAmounts, where relativeAmounts is an int list of amounts for 0, 1, 2 and 3 respectively
+
+relativeAmountPercentages = map (\i -> (frint i)/(frint totalRelativeAmounts)) relativeAmounts
+
+listPartitionedByRelativeAmountPercentages l = ... (shuffle l) ...
+the incoming list will have numbers
+the outcoming list needs to have pairs of number and partitionNumber
+have a progress variable
+cumulate relativeAmountPercentages and then go through each index i from 0 to 33 and check which cumulatedRelativeAmountPercentage is first bigger than progress, and that cumulatedRelativeAmountPercentage's index in cumulatedRelativeAmountPercentages shall be the partitionNumber of the current list item at index i
+-}
+:}
+
+relativeAmounts = [1,1,1,1,1]
+:r
+:{
+-- listPartitionedByRelativeAmounts :: [a] -> [Int] -> Seed_Int -> [(a,Int)]
+listPartitionedByRelativeAmounts l relativeAmounts seed =
+  (partitionNumberAssigner (shuffle seed l)
+  ,cumulatedRelativeAmountPercentages)
+  where
+    totalRelativeAmounts = sum relativeAmounts
+    relativeAmountPercentages :: [Float]
+    relativeAmountPercentages = map (\i -> (frint i)/(frint totalRelativeAmounts)) relativeAmounts
+
+    cumulatedRelativeAmountPercentages :: [Float]
+    cumulatedRelativeAmountPercentages = cumulate relativeAmountPercentages
+    partitionNumberAssigner :: [a] -> [(a, Int)]
+    partitionNumberAssigner' i (listItem:rest) = (listItem, maybe 0 id $ findIndex (\cumulatedRelativeAmountPercentage -> progress < cumulatedRelativeAmountPercentage) cumulatedRelativeAmountPercentages):(partitionNumberAssigner' (i+1) rest)
+      where
+        progress :: Float
+        progress = (frint $ i)/(frint $ length l)
+    partitionNumberAssigner' i [] = []
+    partitionNumberAssigner list = partitionNumberAssigner' 0 list
+:}
+listPartitionedByRelativeAmounts [1..5] [2..4] 0

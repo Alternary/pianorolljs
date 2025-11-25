@@ -119,6 +119,9 @@ function cumulate(l) {
   let xs = l.slice(2)
   return [x].concat(cumulate([x + y].concat(xs)))
 }
+function sum(l) {
+  return l.reduce((s, n) => s + n, 0)
+}
 {
   //1,3,6 from 1,2,3
   // console.log('cumulate', cumulate([1, 2, 3]))
@@ -300,6 +303,11 @@ function ifThenReturn(condition, thenReturn, elseReturn) {
   return condition ? thenReturn : elseReturn
 }
 
+function sortByNumber(l, f) {
+  let l2 = [...l]
+  return l2.sort((a, b) => f(a) - f(b))
+}
+
 export default {
   arithmeticProgression,
   ap,
@@ -319,10 +327,12 @@ export default {
   zipLists,
   cycle,
   cumulate,
+  sum,
   concatLists,
   concatStrings,
   intercalateStrings,
   weird4,
   logBase,
-  ifThenReturn
+  ifThenReturn,
+  sortByNumber
 }

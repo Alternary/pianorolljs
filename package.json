@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "backend": "nodemon --ignore 'patterns/*' backend.js",
+    "backend": "nodemon --ignore 'patterns/*' --ignore 'notes/*' backend.js",
     "frontend": "vite",
     "start-electron": "electron ."
   },

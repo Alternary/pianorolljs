@@ -128,7 +128,11 @@ async function playSamplePattern() {
   let sampleCommandResponse = await axios.post('http://localhost:3001/shellCommand', { body: 'for i in samples/industrial_freesound/*.mp3 ; do echo $i ; mediainfo $i --Inform="Audio;%Duration%" ; done' }) //does work???
   let drumSampleCommandResponse = await axios.post('http://localhost:3001/shellCommand', { body: 'for i in samples/drums/*.mp3 ; do echo $i ; mediainfo $i --Inform="Audio;%Duration%" ; done' }) //does work???
   let sampleDurationPairs = utils.groupBy(sampleCommandResponse.data.split('\n'), 2).map(pair => [pair[0], pair[1] / 1000])
-  let drumSampleDurationPairs = utils.groupBy(drumSampleCommandResponse.data.split('\n'), 2).map(pair => [pair[0], pair[1] / 1000])
+  let drumSampleDurationPairsUnsorted = utils.groupBy(drumSampleCommandResponse.data.split('\n'), 2).map(pair => [pair[0], pair[1] / 1000])
+  let drumSampleDurationPairs = utils.sortByNumber(drumSampleDurationPairsUnsorted,pair => {let string = pair[0] ; return samplePlaying.drumFiles.indexOf('./' + string)})
+    .slice(1) //slicing away empty string
+  console.log('drum sample duration pairs', drumSampleDurationPairs)
+  // return
   // console.log(sampleDurationPairs)
   // await utils.sleep(999999)
 
@@ -173,7 +177,7 @@ async function playSamplePattern() {
     // console.log('here is getPan', getPan())
     if (utils.randomFloat(i + 'f') < 0.7) {
       // playSample(sample, 22 * resultingSampleDuration, sampleOffset, 0.15, getPan(1), Math.random() ** 0.5)
-      samplePlaying.playSample(drumSample, 9 * resultingDrumSampleDuration, 0, 0.1, getPan(2), getRate(2))
+      samplePlaying.playSample(drumSample, 9 * resultingDrumSampleDuration, 0, 0.15, getPan(2), getRate(2))
     }
     else {
       // playSampleLoopinglyAtOffset(sample, times, resultingSampleDuration, sampleOffset, 0.2, getPan(3), getRate(3))
@@ -206,6 +210,20 @@ async function playMelody() {
     // await utils.sleep(Math.random() * 299)
     await utils.sleep(baseTempo)
   }
+}
+
+
+
+async function testCommand() {
+  console.log('testing command')
+  try {
+    let sampleCommandResponse = await axios.post('http://localhost:3001/shellCommand', { body: 'for i in samples/industrial_freesound/*.mp3 ; do echo $i ; mediainfo $i --Inform="Audio;%Duration%" ; done' })
+    console.log(sampleCommandResponse)
+  }
+  catch (err) {
+    console.log('errored with error', err)
+  }
+  console.log('done')
 }
 
 
@@ -244,14 +262,21 @@ async function playSampleSong2() {
   console.log('playSamplePattern() starting')
   //fetch sample names and durations
   let sampleCommandResponse = await axios.post('http://localhost:3001/shellCommand', { body: 'for i in samples/industrial_freesound/*.mp3 ; do echo $i ; mediainfo $i --Inform="Audio;%Duration%" ; done' }) //does work???
+  console.log('here is sample command response', sampleCommandResponse)
   let drumSampleCommandResponse = await axios.post('http://localhost:3001/shellCommand', { body: 'for i in samples/drums/*.mp3 ; do echo $i ; mediainfo $i --Inform="Audio;%Duration%" ; done' }) //does work???
+  console.log('here is drum sample command response', drumSampleCommandResponse)
   let sampleDurationPairs = utils.groupBy(sampleCommandResponse.data.split('\n'), 2).map(pair => [pair[0], pair[1] / 1000])
-  let drumSampleDurationPairs = utils.groupBy(drumSampleCommandResponse.data.split('\n'), 2).map(pair => [pair[0], pair[1] / 1000])
+  // let drumSampleDurationPairs = utils.groupBy(drumSampleCommandResponse.data.split('\n'), 2).map(pair => [pair[0], pair[1] / 1000])
+  let drumSampleDurationPairsUnsorted = utils.groupBy(drumSampleCommandResponse.data.split('\n'), 2).map(pair => [pair[0], pair[1] / 1000])
+  let drumSampleDurationPairs = utils.sortByNumber(drumSampleDurationPairsUnsorted,pair => {let string = pair[0] ; return samplePlaying.drumFiles.indexOf('./' + string)})
+    .slice(1) //slicing away empty string
   // console.log(sampleDurationPairs)
   // await utils.sleep(999999)
+  // console.log('drum sample duration pairs', drumSampleDurationPairs)
+  // return
 
-  let drumDensity = 0.4
-  let drumPatternNumbersSilenced = utils.zipWith((i, r) => r < drumDensity ? i : 99, drumPatternNumbers, musicUtils.randomFloatContinuum(0.1, 999, 16, seed + 'xd'))
+  let drumDensity = 0.7
+  let drumPatternNumbersSilenced = utils.zipWith((i, r) => r < drumDensity ? i : 0, drumPatternNumbers, musicUtils.randomFloatContinuum(0.1, 999, 16, seed + 'xd'))
   const samplePatternNumbers = drumPatternNumbersSilenced.map(i => i % sampleDurationPairs.length)
 
   let drillingPattern = musicUtils.randomFloatContinuum(0.05, 999, 16, seed)
@@ -299,7 +324,12 @@ async function playSampleSong2() {
     let drumSampleDurationPair = drumSampleDurationPairs[drumPatternNumbersSilenced[i]]
     // console.log(sampleDurationPair)
     let sample = sampleDurationPair[0]
+    // console.log('here are drum sample duration pairs',drumSampleDurationPairs)
+    // console.log('here are drum pattern numbers silenced', drumPatternNumbersSilenced)
+    // return
     let drumSample = drumSampleDurationPair[0]
+    // console.log('here is drum sample', drumSample)
+    // return
     let sampleDuration = sampleDurationPair[1]
     let drumSampleDuration = drumSampleDurationPair[1]
     let sampleOffset = (utils.randomFloat(seed + i)) ** 1 * sampleDuration * 0.9
@@ -318,7 +348,7 @@ async function playSampleSong2() {
         samplePlaying.playSample(sample, 22 * resultingSampleDuration, sampleOffset, 0.07, getPan(1), Math.random() ** 0.5)
       }
       if (drumOn) {
-        samplePlaying.playSample(drumSample, 9 * resultingDrumSampleDuration, 0, 0.08, getPan(2), getRate(2))
+        samplePlaying.playSample(drumSample, 9 * resultingDrumSampleDuration, 0, 0.1, getPan(2), getRate(2))
       }
     }
     else {
@@ -326,7 +356,7 @@ async function playSampleSong2() {
         samplePlaying.playSampleLoopinglyAtOffset(sample, times, resultingSampleDuration, sampleOffset, 0.15, getPan(3), getRate(3))
       }
       if (drumOn) {
-        samplePlaying.playSampleLoopinglyAtOffset(drumSample, times, resultingDrumSampleDuration, drumSampleOffset, 0.08, getPan(4), getRate(4))
+        samplePlaying.playSampleLoopinglyAtOffset(drumSample, times, resultingDrumSampleDuration, drumSampleOffset, 0.1, getPan(4), getRate(4))
       }
     }
     // samplePlaying.playSampleLoopinglyAtOffset(sample, times, resultingSampleDuration, sampleOffset, 0.15, getPan(3), getRate(3))
@@ -398,7 +428,7 @@ fetch('./patterns/testpattern.json')
 async function playChordySampleSong() {
   let drumOn = true
   let chordOn = true//false
-  let sampleOn = false
+  let sampleOn = false//true//false
   let bassOn = true//false//true
   let seed = '10'//'8'//'5'//'4'//'l'//'lol'
   let baseTempo = 166//155//177//199//90//330
@@ -416,9 +446,9 @@ async function playChordySampleSong() {
     /*5*/'permutationReplacementIntContinuum', //start end seed randomness duration loopLength
     /*6*/'permutationReplacementDrumContinuum' //seed randomness duration loopLength
   ]
-  let funcNum = 1//0//6
+  let funcNum = 0//1//0//6
   let drumPatternFilename = drumPatternFilenames[funcNum]
-  let seedNumber = 0
+  let seedNumber = 5
   let randomness = 0.1
   let komplexW = 1000
   let start = 0
@@ -467,16 +497,19 @@ async function playChordySampleSong() {
   let sampleCommandResponse = await axios.post('http://localhost:3001/shellCommand', { body: 'for i in samples/industrial_freesound/*.mp3 ; do echo $i ; mediainfo $i --Inform="Audio;%Duration%" ; done' }) //does work???
   let drumSampleCommandResponse = await axios.post('http://localhost:3001/shellCommand', { body: 'for i in samples/drums/*.mp3 ; do echo $i ; mediainfo $i --Inform="Audio;%Duration%" ; done' }) //does work???
   let sampleDurationPairs = utils.groupBy(sampleCommandResponse.data.split('\n'), 2).map(pair => [pair[0], pair[1] / 1000])
-  let drumSampleDurationPairs = utils.groupBy(drumSampleCommandResponse.data.split('\n'), 2).map(pair => [pair[0], pair[1] / 1000])
+  // let drumSampleDurationPairs = utils.groupBy(drumSampleCommandResponse.data.split('\n'), 2).map(pair => [pair[0], pair[1] / 1000])
+  let drumSampleDurationPairsUnsorted = utils.groupBy(drumSampleCommandResponse.data.split('\n'), 2).map(pair => [pair[0], pair[1] / 1000])
+  let drumSampleDurationPairs = utils.sortByNumber(drumSampleDurationPairsUnsorted,pair => {let string = pair[0] ; return samplePlaying.drumFiles.indexOf('./' + string)})
+    .slice(1) //slicing away empty string
   // console.log(sampleDurationPairs)
   // await utils.sleep(999999)
 
-  let drumDensity = 0.4
+  let drumDensity = 0.8
   // console.log(chainContinuumDrumPattern)
   // console.log(drumPatternNumbers)
   // return ""
   // drumPatternNumbers = chainContinuumDrumPattern
-  let drumPatternNumbersSilenced = utils.zipWith((i, r) => r < drumDensity ? i : 99, drumPatternNumbers, musicUtils.randomFloatContinuum(0.1, 999, 16, seed + 'xd'))
+  let drumPatternNumbersSilenced = utils.zipWith((i, r) => r < drumDensity ? i : 0, drumPatternNumbers, musicUtils.randomFloatContinuum(0.1, 999, 16, seed + 'xd'))
   console.log('silenceds',drumPatternNumbersSilenced)
   const samplePatternNumbers = drumPatternNumbersSilenced.map(i => i % sampleDurationPairs.length)
 
@@ -542,7 +575,7 @@ async function playChordySampleSong() {
     let drumSample = drumPatternNumbersSilenced[i] == 99 ? './samples/silence.mp3' : drumSampleDurationPair[0]
     // console.log('drum sample', drumSample)
     // console.log()
-    let sampleDuration = 0//sampleDurationPair[1]
+    let sampleDuration = sampleDurationPair[1]
     let drumSampleDuration = drumSampleDurationPair[1]
     let sampleOffset = (utils.randomFloat(seed + i)) ** 1 * sampleDuration * 0.9
     let drumSampleOffset = (utils.randomFloat(seed + i + 'a')) ** 5 * drumSampleDuration * 0.9
@@ -551,7 +584,7 @@ async function playChordySampleSong() {
     //0.0005 should be made 0.02 if want drill not to overflow, as in     let resultingSampleDuration = Math.min(drillTime / 5, /*here*/0.02 + utils.randomFloat(seed + i + 'b') * drillTime)
     let resultingSampleDuration = Math.min(drillTime / 5, 0.005 + utils.randomFloat(seed + i + 'b') * drillTime)//0.02
     let resultingDrumSampleDuration = Math.min(drillTime / 5, 0.005 + utils.randomFloat(seed + i + 'c') * drillTime)//0.02
-    let times = drillTime / resultingSampleDuration
+    let times = Math.min(22/*11*/,drillTime / resultingDrumSampleDuration) //it used to be resultingSampleDuration, which messed up this "times" for drums, leading to too many times played on drums, though now this would break sample playing similarly, but samples can be broken this way
     let getRate = i => { let x = 0.5; return x + (1 - x) * utils.randomFloat(seed + 'd' + i) * 2 }
     const getPan = j => Math.sign(utils.randomFloat(seed + i + 'e' + j) - 0.5) * (utils.randomFloat(seed + i + 'f' + j)) ** 9
     // console.log('here is getPan', getPan())
@@ -586,5 +619,6 @@ export default {
   playSamplePattern,
   playSampleSong2,
   playChordSong,
-  playChordySampleSong
+  playChordySampleSong,
+  testCommand
 }

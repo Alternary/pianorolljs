@@ -314,6 +314,31 @@ length $ chainContinuumDrum 0
 */
 
 
+// const { default: utils } = await import('./utils.js')
+function listPartitionedByRelativeAmounts(l, relativeAmounts, seed) {
+  let totalRelativeAmounts = utils.sum(relativeAmounts)
+  let relativeAmountPercentages = relativeAmounts.map(i => i / totalRelativeAmounts)
+  let cumulatedRelativeAmountPercentages = utils.cumulate(relativeAmountPercentages)
+  cumulatedRelativeAmountPercentages[cumulatedRelativeAmountPercentages.length - 1] = 1 / 0
+  console.log(cumulatedRelativeAmountPercentages)
+  function partitionNumberAssigner0(i, l0) {
+    // console.log('here is i', i)
+    // console.log('here is l0', l0)
+    if (l0.length == 0) { return [] }
+    let progress = i / l.length
+    // console.log('here is progress', progress)
+    let head = l0[0]
+    let rest = l0.slice(1)
+    return [[head, cumulatedRelativeAmountPercentages.findIndex(cumulatedRelativeAmountPercentage => progress < cumulatedRelativeAmountPercentage)]].concat(partitionNumberAssigner0(i + 1, rest))
+  }
+  function partitionNumberAssigner(l) {
+    return partitionNumberAssigner0(0, l)
+  }
+  return partitionNumberAssigner(utils.shuffle(seed, l))
+}
+// listPartitionedByRelativeAmounts(utils.ap(5),[2,4,4],'a')
+console.log('list partitioned by relative amounts', listPartitionedByRelativeAmounts([1, 2, 3, 4, 5], [2, 5, 3], 'a'))
+
 //if I pick a numeric seed, it might fuck some seed stuff up by introducing same seeds for different parts, but that might just be a feature rather than a bug
 
 export default {
@@ -326,5 +351,6 @@ export default {
   makeDrumBeat,
   randomFloatContinuum,
   randomIntContinuum,
-  chainContinuumDrum
+  chainContinuumDrum,
+  listPartitionedByRelativeAmounts
 }

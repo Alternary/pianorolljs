@@ -28,9 +28,17 @@ app.post('/', (request, response) => {
 app.post('/shellCommand', (request, response) => {
   console.log('here is request', request.body.body)
   const command = request.body.body
-  const output = execSync(command, { encoding: 'utf-8' })
-  console.log('here is output', output)
-  response.send(output)
+  try {
+    // execSync(command, { encoding: 'utf-8' })
+    // execSync('/home/bruh/sk/test.sh', { encoding: 'utf-8' })
+    const output = execSync(command, { encoding: 'utf-8' })
+    console.log('123')
+    console.log('here is output', output)
+    response.send(output)
+  }
+  catch (err) {
+    console.error('shell command error ' + err.toString())
+  }
 })
 
 app.post('/shellCommandUnsynced', (request, response) => {
@@ -51,6 +59,15 @@ app.post('/saveFile', (request, response) => {
 import fetch from 'file-fetch'
 import fs from 'node:fs'
 import eol from 'eol'
+
+//all this just to test whether frontend can be sent large strings at once, and yes, this works
+// let largeString
+// fetch('file:///home/bruh/k/testdir/interactjs-lol/patterns/chainContinuumDrumPattern2.json')
+//   .then(res => res.text())
+//   .then(text => {
+//     largeString = JSON.parse(text)
+//     console.log('fetched large string, which is here',largeString)
+//   })
 
 app.post('/readFile', (request, response) => {
   console.log('here is request', request.body.body)
