@@ -12,6 +12,20 @@ let wonkyScales = utils.arithmeticProgression(999).map(i => {
   return wonkyScale
 })
 console.log('wonk', wonkyScales[0])
+console.log('first 9 wonky scales', wonkyScales.slice(0, 9))
+let minor = [0, 2, 3, 5, 7, 8, 10]
+let transposedScales = scale => utils.ap(12).map(base => scale.map(i => utils.mod(i + base, 12)).sort((a, b) => a - b))
+let majorsAndMinors = utils.cycle(transposedScales(major).concat(transposedScales(minor)), 99)
+console.log('first 9 major and minor scales', majorsAndMinors.slice(0, 9))
+let transposedScalesInMajor = scale => major.map(base => scale.map(i => utils.mod(i + base, 12)).sort((a, b) => a - b))
+let majorsAndMinorsInMajor = utils.cycle(transposedScalesInMajor(major).concat(transposedScalesInMajor(minor)), 99)
+console.log('first 9 majors and minors in major', majorsAndMinorsInMajor.slice(0, 9))
+/*
+actually it needs to be alternating majors and minors
+major minor minor major major minor minor diminished
+but that all just maps straight to the major
+so, just have it be major
+*/
 
 function snapToScale(i, scale) {
   return utils.concatLists(utils.ap(9).map(octave => scale.map(i => i + octave * 12))).find(j => j >= i)
@@ -177,6 +191,25 @@ function mixListsMany(ls, percentages, seedFloats) {
 {
   // console.log('mixListsMany', mixListsMany([[1, 2, 3], [4, 5, 6], [7, 8, 9]], [0.1, 0.5, 0.9], utils.randomFloats('seed', 3)))
 }
+
+/*
+I want to create a loopContinuumWithNoExtraneousElements
+it generates l1Cycled and l2Cycled and then with regard to progress chooses at each step an element from either cycle
+*/
+function loopContinuumWithNoExtraneousElements(l1, l2, mixSeeds) {
+  let overallDuration = mixSeeds.length
+  let l1Cycled = utils.cycle(l1, overallDuration)
+  let l2Cycled = utils.cycle(l2, overallDuration)
+  return utils.zipWithMany((el1, el2, r, i) => {
+    let progress = i / overallDuration
+    return progress < r ? el1 : el2
+  }, [l1Cycled, l2Cycled, mixSeeds, utils.ap(overallDuration)])
+}
+{
+  // console.log('loop continuum with no extraneous elements', loopContinuumWithNoExtraneousElements([1, 2], [3, 4], utils.randomFloats('a', 9)))
+}
+//actually this might be useless
+
 function loopContinuum00(randomness, overallDuration, duration, l1, l2, loopSeeds, mixSeeds) {
   // console.log('in loopContinuum00, overallDuration, duration, l1, l2, loopSeeds, mixSeeds\n', overallDuration, duration, l1, l2, loopSeeds, mixSeeds)
   let len = l1.length
@@ -193,6 +226,7 @@ let loopContinuum0 = (randomness, duration, l1, l2, loopSeeds, mixSeeds) => loop
 
 let loopContinuum = (randomness, duration, l1, l2, loopSeeds, mixSeeds) => utils.concatLists(loopContinuum0(randomness, duration, l1, l2, loopSeeds, mixSeeds))
 
+//apparently randomFloatContinuum generates a continuum of length one more than what's given
 let randomFloatContinuum0 = (randomness, duration, loopLength, seed) => loopContinuum0(randomness, duration, utils.randomFloats(seed + 'laksjd', loopLength), utils.randomFloats(seed + 'asdlkj', loopLength), utils.randomFloats(seed + 'asdlkhj', loopLength * duration), utils.randomFloats(seed + 'qwejpas', loopLength * duration))
 let randomFloatContinuum = (randomness, duration, loopLength, seed) => utils.concatLists(randomFloatContinuum0(randomness, duration, loopLength, seed))
 {
@@ -208,6 +242,91 @@ let randomIntContinuum = (start, end, randomness, duration, loopLength, seed) =>
 {
   // console.log('randomIntContinuum', randomIntContinuum(0, 5, 0.1, 4, 4, 'lol'))
 }
+
+// const { default: utils } = await import('./utils.js')
+// const { default: musicUtils } = await import('./musicUtils.js')
+/*
+wait, I'm mixing sets here, not their elements into a sequence
+I'm mixing sets into a sequence of sets
+
+I could use mixLists
+but I want there to be a continuum of changed elements
+that can be achieved by doing the loopContinuumWithNoExtraneous Elements and grouping into groups the size of the two input lists
+except, the two input lists may have different sizes
+what then?
+how do I mix two lists of different size?
+I assign probabilities to both lists' elements and then I generate a new list with the corresponding probabilities of having each element in that resulting list
+so I could have [1,2,3] and [4,5]
+so then I generate a new list with probability 33% of having 1,2 and 3 and 50% probability of having 4 and 5
+or
+I could have [1,2,3,4] and [5,6] and have the transitionary sets [1,2,3,4], [1,2,3] [1,2,5], [1,2,6], [1,5,6], [5,6]
+where elements can stand for a particular amount of elements, here 5 stands for 2 elements of l1
+so, to morph one set to another of different size
+I could try by restricting current set size in the transition, where at the endpoints of the transition, the set sizes are the initial set sizes, and everywhere in between the set size is the linear combination of the two endpoint set sizes
+
+what I could do is generate a randomFloatContinuum for each set element of the two sets and choose that element to be in a given transitionary set if the corresponding randomFloatContinuum value r at the transitionary index i is smaller than 1/set.length where where set is the set containing that element to choose
+except I need to account for progress too
+maybe by multiplying r by progress
+also what loopLength would I choose for randomFloatContinuum? 1? sure, that certainly creates a smoothish sequence containing duplicates, which I want
+
+actually (with set1=[1,2,3,4] and set2=[5,6]) I need to have expected value 4 of the first ones included and 2 of the second ones included
+but I need to divide the probability by two
+actually, the progress does that?
+at first I need to have 100% probability of including each of the set1 elems and 0% of including each of the set2 elems
+and at middle I need to have 50% probability of including each set1 elems and similarly for set2 elems
+*/
+function generateTransitionBetweenTwoWaypointSets(set1, set2, len, randomness, seed) {
+  let setElemChoiceFloatPairss = set => set.map((elem, i) => randomFloatContinuum(randomness, len, 1, seed + ' ' + i).map(choiceFloat => [elem, choiceFloat]).slice(0, len)) //apparently randomFloatContinuum generates a continuum of length one more than what's given
+  // console.log('set elem choice float pairss', setElemChoiceFloatPairss([1,2,3]))
+  let set1ElemChoiceFloatPairss = setElemChoiceFloatPairss(set1)
+  let set2ElemChoiceFloatPairss = setElemChoiceFloatPairss(set2)
+  let set1And2ElemChoiceFloatPairss = utils.zipLists(set1ElemChoiceFloatPairss.concat(set2ElemChoiceFloatPairss))
+  // console.log('set 1 and 2 elem choice float pairss', set1And2ElemChoiceFloatPairss)
+  function chooseSetElements(set1And2ElemChoiceFloatPairs, progress) {
+    // console.log('in here')
+    // console.log('set 1 and 2 elem choice float pairs', set1And2ElemChoiceFloatPairs)
+    // console.log('progress', progress)
+    let setElemIsIncludedPairs = set1And2ElemChoiceFloatPairs.map((elemChoiceFloatPair, i) => {
+      let elem = elemChoiceFloatPair[0]
+      let choiceFloat = elemChoiceFloatPair[1]
+      let isSet1 = i < set1.length
+      // console.log('elem', elem)
+      // console.log('choice float', choiceFloat)
+      // console.log('progress', progress)
+      let elemIsIncluded = choiceFloat < (isSet1 ? (1 - progress) : progress)
+      return [elem, elemIsIncluded]
+    })
+    // console.log('set elem is included pairs', setElemIsIncludedPairs)
+    let resultingSet = setElemIsIncludedPairs.filter(pair => pair[1]).map(pair => pair[0])
+    return resultingSet
+  }
+  // console.log('here')
+  let setContinuum = utils.zipWith(
+    (set1And2ElemChoiceFloatPairs, progress) => { /*console.log('and in here');*/ return chooseSetElements(set1And2ElemChoiceFloatPairs, progress) },
+    set1And2ElemChoiceFloatPairss, utils.ap(len).map(i => (i + 1) / (len + 1)))
+  return setContinuum
+}
+console.log('generate transition between two waypoint sets', generateTransitionBetweenTwoWaypointSets([1, 2, 3, 4], [5, 6], 5, 0.1, 'a'))
+console.log('generate transition between two waypoint sets', generateTransitionBetweenTwoWaypointSets([1, 2, 3, 4], [5, 6, 7, 8], 5, 0.1, 'b'))
+
+/*
+I need a function that takes a list of waypoints and generates transitions between them
+needs to first create pairs of waypoints
+by duplicating elements by 2, removing endpoints and groupBy 2
+*/
+function generateTransitionsBetweenManyWaypointSets(waypointSets, len, randomness, seed) {
+  let duplicatedWaypoints = utils.duplicate(2, waypointSets)
+  let waypointPairs = utils.groupBy(duplicatedWaypoints.slice(1, duplicatedWaypoints.length - 1), 2)
+  let transitions = waypointPairs.map(pair => {
+    let set1 = pair[0]
+    let set2 = pair[1]
+    let transition = generateTransitionBetweenTwoWaypointSets(set1, set2, len, randomness, seed)
+    return transition
+  })
+  let continuum = utils.concatLists(transitions)
+  return continuum
+}
+console.log('generate transitions between many waypoint sets', generateTransitionsBetweenManyWaypointSets([[1, 2, 3], [4, 5], [6, 7, 8]], 3, 0.3, 'b'))
 
 let chainContinuumDrum = (seed, randomness0) => {
   let overallDuration = 7777//9999 //loopContinuum fails at too large durations, thankfully only quite large, so I need not probably fix it
@@ -382,12 +501,18 @@ export default {
   major,
   pentatonic,
   wonkyScales,
+  majorsAndMinors,
+  majorsAndMinorsInMajor,
   chromatic,
   snapToScale,
   drumFiles,
   makeDrumBeat,
+  mixLists,
+  mixListsMany,
   randomFloatContinuum,
   randomIntContinuum,
+  generateTransitionBetweenTwoWaypointSets,
+  generateTransitionsBetweenManyWaypointSets,
   chainContinuumDrum,
   listPartitionedByRelativeAmounts,
   mapDrumPatternToDrumPartitions,

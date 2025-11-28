@@ -1,0 +1,5 @@
+transition chords smoothly into one another
+
+need to take a list of waypoints and generate continuums between them
+the chord lasts for about 8 beats
+
