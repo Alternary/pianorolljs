@@ -1,4 +1,6 @@
 import seedrandom from 'seedrandom'
+// import { sqrt } from 'mathjs'
+// console.log(sqrt(-4))
 
 const arithmeticProgression = n => Array.from(Array(n)).map((x, i) => i)
 const ap = arithmeticProgression
@@ -312,6 +314,23 @@ function snapFloatToRange(f, start, end) {
   return start + Math.floor(f * (end + 1 - start))
 }
 
+function twoAdicValuation(n) {
+  let v = 0
+  let x = n / 2
+  while (x % 1 == 0 && x != 0) {
+    x /= 2
+    v++
+  }
+  return v
+}
+// console.log(ap(9).map(twoAdicValuation))
+
+function normalize(l) {
+  let s = sum(l)
+  return l.map(el => el / (s == 0 ? 1 : s))
+}
+console.log(normalize([1, 2, 3]))
+
 export default {
   arithmeticProgression,
   ap,
@@ -342,5 +361,7 @@ export default {
   logBase,
   ifThenReturn,
   sortByNumber,
-  snapFloatToRange
+  snapFloatToRange,
+  twoAdicValuation,
+  normalize
 }

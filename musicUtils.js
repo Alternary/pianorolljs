@@ -1,4 +1,7 @@
 import utils from './utils.js'
+import { create, all } from 'mathjs'
+const math = create(all)
+
 
 let major = [0, 2, 4, 5, 7, 9, 11]
 let pentatonic = [0, 2, 5, 7, 9]
@@ -29,6 +32,105 @@ so, just have it be major
 
 function snapToScale(i, scale) {
   return utils.concatLists(utils.ap(9).map(octave => scale.map(i => i + octave * 12))).find(j => j >= i)
+}
+
+/*
+make chord song where notes are played at the beginning of each bar, mostly, I want chords to be played at the most rational points, so out of 8, 0,4,2,6, then the rest
+rather than most rational, choose those which are most akin to a multiple of two
+assign probability 0.5 to the highest power of two, then 0.25 to the multiples of the second highest power of two
+
+so out of 16 we have this
+0;8;4,12;2,6,10,14;
+then we have 1 and 15, since they are extremely close to the highest power 16=0, then 7 and 9, then 3,5,11 and 13
+similarly we should have 2 and 14 before 6 and 10
+so altogether the list is as follows
+0;8;4,12;2,14;6,10;1,15;7,9;3,5,11,13
+
+actually, I can just hardcode it since I'll only use it for intervals of size 16 or 8
+so, what shall the hardcoding be?
+1/2: 0
+1/4: 8
+1/8: 4,12
+1/10: 2,14
+1/12: 6,10
+1/14: 1,15
+1/16: 7,9
+1/18: 3,5,11,13
+calculate distances to all powers of two with weights, so the distance to 0=16 has weight 0.5 and so on
+actually it is recursive
+it is a set of equations self referential to be solved
+try with interval of 4
+0 is 0.5, then 2 is 2 away from 0 and 1 away from 1
+let's call a the weight of 2 and b the weights of 1 and 3
+a=1/distanceTo0*weight0+1/distanceTo1*weight1
+=1/2*0.5+1/1*b
+and b=1/1*0.5+1/1*a
+or rather, should I include duplicates? surely
+so
+actually 0.5 for 0 may be too little, try naming it a to begin with
+also where do I factor in the fact that 2 is a power of two and needs to be held in high regard?
+regardless for now try solving the simple system of equations
+a = 1/1*b+1/2*c+1/1*d
+b = 1/1*a+1/1*c+1/2*d
+c = 1/2*a+1/1*b+1/1*d
+d = b
+->
+a = b+c/2+d
+b = a+c+d/2
+c = a/2+b+d
+d = b
+actually put its power of two into the formula itself
+that is, a = 1a, b = 1/4b, c = 1/2c,...
+so, proximity and the largest power of two that it includes
+yeah that's actually the formula then
+so
+a = 1(1/1*b+1/2*c+1/1*d)
+b = 1/4(1/1*a+1/1*c+1/2*d)
+c = 1/2(1/2*a+1/1*b+1/1*d)
+d = b
+->
+3/5a = c
+b = 16/35a
+d = b
+pick a to be 1, then calculate the total and divide all by that to normalize the whole set
+c = 3/5
+b = d = 16/35
+
+then try with interval 8
+a = b+1/2c+1/3d+1/4e+1/3f+1/2g+h
+I will always end up with a matrix
+now what is its diagonal?
+what is the coefficient of 2 or 6? it's the same for both, it's 2*1/8
+so the diagonal at index is the negation of 2-adic_valuation(i)/width_of_matrix
+twoAdicValuation(n)
+and then there is on each row centered at the diagonal and wrapping around a harmonic sequence or a sequence of negative powers of consecutive integers
+how to express that?
+first create the template sequence for all the rows
+
+this actually also pertains harmony, I can create chords from these ratios
+*/
+function measureOfPowerOfTwo(width, base) {
+  let power = -1
+  // base = 1.35
+  let powerReciprocalSequenceTemplate = utils.ap(width / 2 + 1).slice(2).map(i => i ** power).concat(utils.ap(width / 2 + 2).slice(2).map(i => (width / 2 + 3 - i) ** power))
+  // let powerReciprocalSequenceTemplate = utils.ap(width / 2 + 1).slice(2).map(i => -Math.log(1 + i)).concat(utils.ap(width / 2 + 2).slice(2).map(i => -Math.log(1 + (width / 2 + 3 - i))))
+  function row(i) {
+    let t = powerReciprocalSequenceTemplate
+    let center = -(base ** (width / 2 - utils.twoAdicValuation(i == 0 ? width : i)))
+    return t.slice(width - i - 1).concat([center]).concat(t.slice(0, width - i - 1))
+  }
+  let matrix = utils.ap(width).map(row)
+  // console.log('matrix', matrix)
+  let unnormalizedMeasureVector = utils.concatLists(math.lusolve(matrix, utils.ap(width).map(i => 1 + 0 * 1.5 ** (1 + utils.twoAdicValuation((i == 0 ? width : i))))))
+  // console.log('unnormalized measure vector', unnormalizedMeasureVector)
+  return utils.normalize(unnormalizedMeasureVector)
+}
+{
+  let width = 8
+  let base = 1.5
+  // console.log(measureOfPowerOfTwo(width, power))
+  //console.log('([0,...,16],[' + (measureOfPowerOfTwo(16, 1.5).toString()) + '])')
+  //console.log('([0,...,16],[' + (measureOfPowerOfTwo(16, 2.5).toString()) + '])')
 }
 
 //this is just akin to random bits isn't it?
@@ -495,6 +597,9 @@ function departitionDrumPartitionPattern(partitionPattern, intraPartitionFloats)
 
 }
 
+console.log('([0,...,16],[' + (measureOfPowerOfTwo(16, 2.5).toString()) + '])')
+
+
 //if I pick a numeric seed, it might fuck some seed stuff up by introducing same seeds for different parts, but that might just be a feature rather than a bug
 
 export default {
@@ -505,6 +610,7 @@ export default {
   majorsAndMinorsInMajor,
   chromatic,
   snapToScale,
+  measureOfPowerOfTwo,
   drumFiles,
   makeDrumBeat,
   mixLists,

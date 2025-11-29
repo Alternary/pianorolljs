@@ -26,6 +26,7 @@
     "express": "^5.1.0",
     "file-fetch": "^2.0.1",
     "interactjs": "^1.10.27",
+    "mathjs": "^15.1.0",
     "node-fetch": "^3.3.2",
     "node-web-audio-api": "^1.0.7",
     "nodemon": "^3.1.10",
