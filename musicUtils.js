@@ -1,4 +1,5 @@
 import utils from './utils.js'
+import axios from 'axios'
 import { create, all } from 'mathjs'
 const math = create(all)
 
@@ -33,6 +34,8 @@ so, just have it be major
 function snapToScale(i, scale) {
   return utils.concatLists(utils.ap(9).map(octave => scale.map(i => i + octave * 12))).find(j => j >= i)
 }
+
+let freqToInt = f => Math.round(utils.logBase(2, f / (55 / 2)) * 12 - 3)
 
 /*
 make chord song where notes are played at the beginning of each bar, mostly, I want chords to be played at the most rational points, so out of 8, 0,4,2,6, then the rest
@@ -132,6 +135,117 @@ function measureOfPowerOfTwo(width, base) {
   //console.log('([0,...,16],[' + (measureOfPowerOfTwo(16, 1.5).toString()) + '])')
   //console.log('([0,...,16],[' + (measureOfPowerOfTwo(16, 2.5).toString()) + '])')
 }
+
+/*
+now, do the harmony based on the measure
+now instead of using twoAdicValuation, use primeFactors(n) and then depending on how large that factor is, add a term
+let's try for 8
+a = 1*2*2*2/(1*2*3*2*5*7*2)(...) where we divide by the biggest prime powers that fit inside 8, or maybe we could divide by the powers' sum
+b = 1/(1*2*3*2*5*7*2)(...)
+c = 1*2/(1*2*3*2*5*7*2)(...)
+d = 1*3/...
+e = 1*2*2...
+f = 1*5...
+g = 1*2*3...
+h = 1*7...
+*/
+function measureOfPrimality(width, base) {
+  let power = -1
+  // base = 1.35
+  let powerReciprocalSequenceTemplate = utils.ap(width / 2 + 1).slice(2).map(i => i ** power).concat(utils.ap(width / 2 + 2).slice(2).map(i => (width / 2 + 3 - i) ** power))
+  // let powerReciprocalSequenceTemplate = utils.ap(width / 2 + 1).slice(2).map(i => -Math.log(1 + i)).concat(utils.ap(width / 2 + 2).slice(2).map(i => -Math.log(1 + (width / 2 + 3 - i))))
+  function row(i) {
+    let t = powerReciprocalSequenceTemplate
+    //this setup produces the sine wave
+    let center0 = -(2 ** utils.product(utils.primeFactors(i == 0 ? width : i).map(pair => pair[0] ** pair[1]))) / utils.product(utils.primePowersSmallerThanNumber(width).map(pair => pair[0] ** pair[1]))
+    console.log(center0)
+    let center = center0//-(99 ** (0 - center0))
+    return t.slice(width - i - 1).concat([center]).concat(t.slice(0, width - i - 1))
+  }
+  let matrix = utils.ap(width).map(row)
+  // console.log('matrix', matrix)
+  let unnormalizedMeasureVector = utils.concatLists(math.lusolve(matrix, utils.ap(width).map(i => 1 + 0 * 1.5 ** (1 + utils.twoAdicValuation((i == 0 ? width : i))))))
+  // console.log('unnormalized measure vector', unnormalizedMeasureVector)
+  return utils.normalize(unnormalizedMeasureVector)
+}
+
+function yoccozsFunction(a, iterations) {
+  function alpha(m) {
+    if (m <= 0) {
+      return a % 1
+    }
+    return (1 / alpha(m - 1)) % 1
+  }
+  let terms = utils.ap(iterations)
+    .map(n => utils.product(utils.ap(n)
+      .map(m => alpha(m))) * Math.log(1 / alpha(n)))
+  return utils.sum(terms)
+}
+
+//for a real number in the unit interval
+async function brjunoFunction(a) {
+  let index = Math.floor((1000 - 0.0001) * a)
+  let data
+  let response = await axios.post('http://localhost:3001/readFile', { body: '/home/bruh/k/testdir/interactjs-lol/datata/brjuno_thousand.json' })
+  // .then(text => {
+  //   data = text.data
+  //   // console.log(data)
+  //   console.log('data at index', data[index])
+  //   return data[index]
+  // })
+  return response.data[index]
+}
+
+
+function selectOverOrUnderTone(inputFreq, choiceFloat, sideWidth, preOverlyingDistributionCurvature0, overlyingCurvature0) {
+  // console.log('input freq, choice float, side width', inputFreq, choiceFloat, sideWidth)
+  let minFreq = 33//33 is the smallest freq that yields a positive freqToInt
+  let undertoneFractions = utils.ap(sideWidth + 1).slice(2).map(i => 1 / i).reverse()
+  let overtoneFractions = utils.ap(sideWidth + 1).slice(2)
+  let overAndUnderToneFractionList = utils.concatLists([undertoneFractions, [1], overtoneFractions])
+  let overAndUnderToneList = overAndUnderToneFractionList.map(f => inputFreq * f)
+  let centralIndex = sideWidth - 1
+  let preOverlyingDistributionCurvature = preOverlyingDistributionCurvature0 / sideWidth
+  let overAndUnderToneProbabilityDistributionPreOverlyingDistribution = i => Math.exp(-((preOverlyingDistributionCurvature * (i - centralIndex)) ** 2))//bell curve for fractions
+  // console.log('over and undertone probability distribution pre overlying distribution', utils.ap(10).map(i => overAndUnderToneProbabilityDistributionPreOverlyingDistribution(i)))
+  let overlyingCenter = Math.exp((Math.log(minFreq) + Math.log(15000)) / 2) //550
+  let overlyingCurvature = overlyingCurvature0 / Math.log(overlyingCenter)
+  let overlyingDistribution = freq => freq < minFreq || freq > 15000 ? 0 : Math.exp(-((overlyingCurvature * (Math.log(overlyingCenter) - Math.log(freq))) ** 2))//bell curve? maybe a very flat one, and then zero beyond endpoints
+  // console.log('overlying distribution', utils.ap(10).map(i => [overlyingDistribution(2.1 ** i * 20), 2.1 ** i * 20]))
+  let unnormalizedOverAndUnderToneRelativeProbabilityPairs = overAndUnderToneList.map((overOrUnderTone, i) => {
+    let overAndUnderToneProbabilityPreOverlyingDistribution = overAndUnderToneProbabilityDistributionPreOverlyingDistribution(i)
+    let overlyingProbability = overlyingDistribution(overOrUnderTone)
+    let combinedProbability = overAndUnderToneProbabilityPreOverlyingDistribution * overlyingProbability
+    // console.log(overOrUnderTone, combinedProbability)
+    return [overOrUnderTone, combinedProbability]
+  })
+  // console.log('unnormalized over and undertone relative probability pairs', unnormalizedOverAndUnderToneRelativeProbabilityPairs)
+  let totalRelativeProbabilities = utils.sum(unnormalizedOverAndUnderToneRelativeProbabilityPairs.map(pair => pair[1]))
+  let normalizedOverAndUnderToneProbabilityPairs = unnormalizedOverAndUnderToneRelativeProbabilityPairs.map(pair => {
+    let overOrUnderTone = pair[0]
+    let relativeProbability = pair[1]
+    let probability = relativeProbability / totalRelativeProbabilities
+    return [overOrUnderTone, probability]
+  })
+  // console.log('normalized over and undertone probability pairs', normalizedOverAndUnderToneProbabilityPairs)
+  let cumulatedOverAndUnderToneProbabilityPairs = utils.cumulatePairs(normalizedOverAndUnderToneProbabilityPairs)
+  // console.log('cumulated over and undertone probability pairs', cumulatedOverAndUnderToneProbabilityPairs)
+  let chosenPair = cumulatedOverAndUnderToneProbabilityPairs.find(pair => pair[1] > choiceFloat)
+  // console.log('chosenPair', chosenPair)
+  let chosenFreq = chosenPair[0]
+  // console.log(freqToInt(33)) //33 is the smallest freq that yields a positive freqToInt
+  return chosenFreq
+}
+{
+  let sideWidth = 3//9
+  let len = 22//9
+  let choiceFloats = utils.randomFloats('lol', len)
+  let inputFreqs = utils.randomFloats('lol2', len).map(r => r * 550)
+  let preOverlyingDistributionCurvature = 2
+  let overlyingCurvature = 2
+  console.log('selected over and undertones', utils.zipWith((choiceFloat, inputFreq) => [inputFreq, selectOverOrUnderTone(inputFreq, choiceFloat, sideWidth, preOverlyingDistributionCurvature, overlyingCurvature)], choiceFloats, inputFreqs))
+}
+// console.log(undefined[0])
 
 //this is just akin to random bits isn't it?
 function generateAlternation(seed, len) {
@@ -350,7 +464,7 @@ let randomIntContinuum = (start, end, randomness, duration, loopLength, seed) =>
 /*
 wait, I'm mixing sets here, not their elements into a sequence
 I'm mixing sets into a sequence of sets
-
+ 
 I could use mixLists
 but I want there to be a continuum of changed elements
 that can be achieved by doing the loopContinuumWithNoExtraneous Elements and grouping into groups the size of the two input lists
@@ -365,12 +479,12 @@ I could have [1,2,3,4] and [5,6] and have the transitionary sets [1,2,3,4], [1,2
 where elements can stand for a particular amount of elements, here 5 stands for 2 elements of l1
 so, to morph one set to another of different size
 I could try by restricting current set size in the transition, where at the endpoints of the transition, the set sizes are the initial set sizes, and everywhere in between the set size is the linear combination of the two endpoint set sizes
-
+ 
 what I could do is generate a randomFloatContinuum for each set element of the two sets and choose that element to be in a given transitionary set if the corresponding randomFloatContinuum value r at the transitionary index i is smaller than 1/set.length where where set is the set containing that element to choose
 except I need to account for progress too
 maybe by multiplying r by progress
 also what loopLength would I choose for randomFloatContinuum? 1? sure, that certainly creates a smoothish sequence containing duplicates, which I want
-
+ 
 actually (with set1=[1,2,3,4] and set2=[5,6]) I need to have expected value 4 of the first ones included and 2 of the second ones included
 but I need to divide the probability by two
 actually, the progress does that?
@@ -517,12 +631,12 @@ chainContinuumDrum' seed randomness' = continuum 1--maxAmount
     randomness2 = 0.5 --controls how much to emphasize from previous layer
     --layer amount
     maxAmount = floor $ logBase 2 $ 128
-
+ 
     drumBeat1 i = take (2^i) $ concat $ map (\j -> makeDrumBeat (((seed*maxAmount+i)*2)*8+j) randomness) [0..]
     drumBeat2 i = take (2^i) $ concat $ map (\j -> makeDrumBeat (((seed*maxAmount+i)*2+1)*8+j) randomness) [0..]
-
+ 
     continuum 0 = take overallDuration $ randomInts 0 (length drumNumerals) seed
-
+ 
     continuum i =
       trace (show (
         drumBeat1 i,
@@ -531,7 +645,7 @@ chainContinuumDrum' seed randomness' = continuum 1--maxAmount
       $ loopContinuum randomness2 (div overallDuration (2^i)) (drumBeat1 i) (drumBeat2 i) (continuum $ i-1) (randomFloats2 $ seed*maxAmount+i)
 :}
 length $ chainContinuumDrum 0
-
+ 
 */
 
 
@@ -597,7 +711,56 @@ function departitionDrumPartitionPattern(partitionPattern, intraPartitionFloats)
 
 }
 
-console.log('([0,...,16],[' + (measureOfPowerOfTwo(16, 2.5).toString()) + '])')
+// console.log('([0,...,16],[' + (measureOfPrimality(16, 2.5).toString()) + '])')
+// console.log('([0,...,8],[' + (measureOfPrimality(8, 2.5).toString()) + '])')
+// console.log('([0,...,16],[' + (utils.ap(16).map(i => yoccozsFunction(i / 16)).map(x => Math.abs(x) == Infinity ? 99 * Math.sign(x) : x).toString()) + '])')
+// console.log('([0,...,64],[' + (utils.ap(64).map(i => yoccozsFunction(i / 64)).map(x => Math.abs(x) == Infinity ? 99 * Math.sign(x) : x).toString()) + '])')
+async function lol() {
+  let brjunoNumbers = utils.ap(9).map(i => i / 10).map(brjunoFunction)
+  for (let brjunoNumber of brjunoNumbers) {
+    let x = await brjunoNumber
+    console.log('x', x)
+  }
+  let x = await brjunoFunction(1 / 10)
+  console.log(x)
+  console.log(await brjunoFunction(1 / 10))
+}
+lol()
+async function lel() {
+  let x = await brjunoFunction(1 / 10)
+  await utils.sleep(1000)
+  console.log('lol', x)
+}
+lel()
+
+function generateOverAndUnderToneSequence(seed, sideWidth, preOverlyingDistributionCurvature, overlyingCurvature, choiceFloats) {
+  let len = choiceFloats.length
+  let initialFreq = Math.exp(utils.randomFloat(seed)) / Math.exp(1) * 550
+  let freqs = [550]//[initialFreq]
+  for (let i in utils.ap(len)) {
+    let inputFreq = freqs[i]
+    freqs.push(selectOverOrUnderTone(inputFreq, choiceFloats[i], sideWidth, preOverlyingDistributionCurvature, overlyingCurvature))
+  }
+  return freqs
+}
+{
+  let seed = 'lol'
+  let sideWidth = 9
+  let len = 44
+  let preOverlyingDistributionCurvature = 2
+  let overlyingCurvature = 2
+  let choiceFloats = randomFloatContinuum(0.5, len, 1, seed)
+  // console.log('choice floats', choiceFloats)
+  console.log('generate over and undertone sequence', generateOverAndUnderToneSequence(seed, sideWidth, preOverlyingDistributionCurvature, overlyingCurvature, choiceFloats))
+}
+{
+  // let rs = randomFloatContinuum(0.1, 99, 4, 'lol')
+  // for (let r of rs) {
+  //   console.log(r)
+  // }
+  // console.log(rs)
+}
+// console.log(undefined[0])
 
 
 //if I pick a numeric seed, it might fuck some seed stuff up by introducing same seeds for different parts, but that might just be a feature rather than a bug
@@ -610,7 +773,9 @@ export default {
   majorsAndMinorsInMajor,
   chromatic,
   snapToScale,
+  freqToInt,
   measureOfPowerOfTwo,
+  selectOverOrUnderTone,
   drumFiles,
   makeDrumBeat,
   mixLists,
@@ -622,5 +787,6 @@ export default {
   chainContinuumDrum,
   listPartitionedByRelativeAmounts,
   mapDrumPatternToDrumPartitions,
-  departitionDrumPartitionPattern
+  departitionDrumPartitionPattern,
+  generateOverAndUnderToneSequence
 }

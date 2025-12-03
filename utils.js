@@ -1,9 +1,14 @@
 import seedrandom from 'seedrandom'
+import axios from 'axios'
+import fs from 'fs'
+import { create, all } from 'mathjs'
+const math = create(all)
 // import { sqrt } from 'mathjs'
 // console.log(sqrt(-4))
 
-const arithmeticProgression = n => Array.from(Array(n)).map((x, i) => i)
+const arithmeticProgression = n => n < 0 ? [] : Array.from(Array(n)).map((x, i) => i)
 const ap = arithmeticProgression
+// console.log(ap(-1))
 const chooseRandom = l => l[Math.floor(Math.random() * l.length)]
 const sigmoid = (x, steepness) =>
   1 / (1 + Math.exp(- 4 * steepness * (x - 0.5)))
@@ -329,7 +334,100 @@ function normalize(l) {
   let s = sum(l)
   return l.map(el => el / (s == 0 ? 1 : s))
 }
-console.log(normalize([1, 2, 3]))
+// console.log(normalize([1, 2, 3]))
+
+function countNonCommentLines(lines) {
+  let lineAmount = 0
+  let inComment = false
+  for (let line of lines) {
+    if (line.trim().startsWith('//')) {
+      //do nothing
+    }
+    else if (line.trim().startsWith('/*')) {
+      inComment = true
+    }
+    else if (line.includes('*/')) {
+      inComment = false
+    }
+    else if (inComment) {
+      //do nothing
+    }
+    else {
+      lineAmount++
+    }
+  }
+  return lineAmount
+}
+
+async function countNonCommentLinesOfFiles() {
+  let lsCommandResponse = await axios.post('http://localhost:3001/shellCommand', { body: 'ls *.js' })
+  let filenames = lsCommandResponse.data.split('\n').sort().slice(1)
+  let lineAmount = 0
+  for (let filename of filenames) {
+    let data = fs.readFileSync('./' + filename, 'utf8')
+    let lines = data.split('\n')
+    lineAmount += countNonCommentLines(lines)
+  }
+  console.log(lineAmount)
+}
+// countNonCommentLinesOfFiles()
+
+function primeFactors(n) {
+  // console.log(n)
+  let factorAmountPairs = []
+  let x = n
+  let primes = ap(n + 1).filter(i => math.isPrime(i))
+  let primeIndex = 0
+  while (primeIndex < primes.length) {
+    // console.log(factorAmountPairs)
+    let prime = primes[primeIndex]
+    if (x % prime == 0) {
+      x = x / prime
+      let primeAmountPairIndex0 = factorAmountPairs.findIndex(pair => pair[0] == prime)
+      let primeAmountPairIndex = primeAmountPairIndex0 == -1 ? factorAmountPairs.length : primeAmountPairIndex0
+      let primeAmountPair = factorAmountPairs[primeAmountPairIndex]
+      let amount = primeAmountPair == undefined ? 0 : primeAmountPair[1]
+      factorAmountPairs[primeAmountPairIndex] = [prime, amount + 1]
+      primeIndex = 0
+    }
+    else {
+      primeIndex++
+    }
+  }
+  return factorAmountPairs
+}
+// console.log(ap(9).map(primeFactors))
+
+function primePowersSmallerThanNumber(n) {
+  let primes = ap(n + 1).filter(i => math.isPrime(i))
+  return primes.map(p => [p, Math.floor(Math.log(n) / Math.log(p))]).filter(p => p[1] > 0)
+}
+// console.log('prime powers smaller than number', primePowersSmallerThanNumber(9))
+
+function product(l) {
+  let p = 1
+  for (let i of l) {
+    p *= i
+  }
+  return p
+}
+// console.log('product', product([1, 2, 3, 4]))
+
+// console.log(math.erf(1))
+
+function cumulatePairs(pairs) {
+  //I could do this with reduce, but fuck it, this is simpler to read
+  let cumulatedPairs = []
+  let sum = 0
+  for (let pair of pairs) {
+    let item = pair[0]
+    let number = pair[1]
+    sum += number
+    cumulatedPairs.push([item, sum])
+  }
+  return cumulatedPairs
+}
+console.log(cumulatePairs([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]]))
 
 export default {
   arithmeticProgression,
@@ -363,5 +461,10 @@ export default {
   sortByNumber,
   snapFloatToRange,
   twoAdicValuation,
-  normalize
+  normalize,
+  countNonCommentLinesOfFiles,
+  primeFactors,
+  primePowersSmallerThanNumber,
+  product,
+  cumulatePairs
 }
