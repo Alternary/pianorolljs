@@ -762,6 +762,51 @@ function generateOverAndUnderToneSequence(seed, sideWidth, preOverlyingDistribut
 }
 // console.log(undefined[0])
 
+//maybe just pick a random harmonic of a random previous tone
+//favor self tone by 1/2 probability, do a cumulation
+function generateMultiHarmonicSequences(sequenceAmount, randomness, len, sideWidth, preOverlyingDistributionCurvature, overlyingCurvature, seed) {
+  let loopLength = 32
+  let toneChoiceFloatColumns = utils.zipLists(utils.ap(sequenceAmount).map(i => randomFloatContinuum(randomness, len / loopLength, loopLength, seed + ' ' + i)))
+  let harmonicChoiceFloatColumns = utils.zipLists(utils.ap(sequenceAmount).map(i => randomFloatContinuum(randomness, len / loopLength, loopLength, seed + ' lol ' + i)))
+  let multiHarmonicSequenceColumns = [utils.randomFloats(seed, sequenceAmount).map(f => Math.pow(15000 / 33, f) * 33)] //initializing
+  // console.log(len / loopLength)
+  // console.log('tone choice float columns', toneChoiceFloatColumns)
+  // console.log('harmonic choice float columns', harmonicChoiceFloatColumns)
+  // console.log('multiharmonic sequence columns', multiHarmonicSequenceColumns)
+  // console.log(undefined[0])
+  for (let i in utils.ap(len)) {
+    // console.log('i', i)
+    // console.log('multiharmonic sequence columns', multiHarmonicSequenceColumns[i])
+    let toneChoiceFloatColumn = toneChoiceFloatColumns[i]
+    let harmonicChoiceFloatColumn = harmonicChoiceFloatColumns[i]
+    let previousMultiHarmonicSequenceColumn = multiHarmonicSequenceColumns[i]
+    // console.log('tone choice float column', toneChoiceFloatColumn)
+    // console.log('harmonic choice float column', harmonicChoiceFloatColumn)
+    // console.log('previous multiharmonic sequence column', previousMultiHarmonicSequenceColumn)
+    // utils.zipWithMany((a,b) => {console.log('lol')},[1,2])
+    // console.log(undefined[0])
+    let multiHarmonicSequenceColumn = utils.zipWithMany((toneChoiceFloat, harmonicChoiceFloat, j) => {
+      // console.log('in multiharmonic sequence column')
+      let toneIndex = j
+      let toneProbabilityPairs = previousMultiHarmonicSequenceColumn.map((tone, k) => [tone, k == toneIndex ? 1 / 2 : 1 / (sequenceAmount - 1)])
+      let toneCumulationPairs = utils.cumulatePairs(toneProbabilityPairs)
+      //I need two floats, one for selecting the tone, another for selecting its harmonic
+      let toneToSelectHarmonicFor = toneCumulationPairs.find(pair => pair[1] > toneChoiceFloat)[0]
+      let harmonic = selectOverOrUnderTone(toneToSelectHarmonicFor, harmonicChoiceFloat, sideWidth, preOverlyingDistributionCurvature, overlyingCurvature)
+      return harmonic
+    }
+      , [toneChoiceFloatColumn, harmonicChoiceFloatColumn, utils.ap(sequenceAmount)])
+    // console.log('multiharmonic sequence column', multiHarmonicSequenceColumn)
+    // console.log(undefined[0])
+    multiHarmonicSequenceColumns.push(multiHarmonicSequenceColumn)
+  }
+  // console.log(multiHarmonicSequenceColumns.length)
+  // console.log(undefined[0])
+  return utils.zipLists(multiHarmonicSequenceColumns)
+}
+// console.log('generate multiharmonic sequences'); generateMultiHarmonicSequences(5, 0.1, 3, 9, 5, 2, 'lol')
+console.log('generate multiharmonic sequences', generateMultiHarmonicSequences(5, 0.1, 3, 9, 5, 2, 'lol'))
+
 
 //if I pick a numeric seed, it might fuck some seed stuff up by introducing same seeds for different parts, but that might just be a feature rather than a bug
 
@@ -788,5 +833,6 @@ export default {
   listPartitionedByRelativeAmounts,
   mapDrumPatternToDrumPartitions,
   departitionDrumPartitionPattern,
-  generateOverAndUnderToneSequence
+  generateOverAndUnderToneSequence,
+  generateMultiHarmonicSequences
 }
