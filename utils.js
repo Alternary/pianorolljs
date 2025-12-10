@@ -9,6 +9,7 @@ const math = create(all)
 const arithmeticProgression = n => n < 0 ? [] : Array.from(Array(n)).map((x, i) => i)
 const ap = arithmeticProgression
 // console.log(ap(-1))
+const range = (start, end) => ap(end - start).map(i => start + i)
 const chooseRandom = l => l[Math.floor(Math.random() * l.length)]
 const sigmoid = (x, steepness) =>
   1 / (1 + Math.exp(- 4 * steepness * (x - 0.5)))
@@ -427,11 +428,43 @@ function cumulatePairs(pairs) {
   }
   return cumulatedPairs
 }
-console.log(cumulatePairs([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]]))
+// console.log(cumulatePairs([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]]))
+
+//this really only maybe works for monotonic functions
+//to compute the inverse at x, we need to solve f(y) = x, so we need to plug in y values so that we get f(yLow) < x and f(yHigh) > x and so we choose yMid = (yLow + yHigh) / 2 and then we see on which side cdf(yMid) is of x and choose it to be the next yLow or yHigh
+function inverse(x, f, tolerance) {
+  let yLow = -1
+  let yHigh = 1
+  while (yHigh - yLow > tolerance) {
+    //test whether x is left of f(yLow)
+    if (x < f(yLow)) {
+      yLow = yLow * 2
+      continue
+    }
+    //test whether x is right of f(yHigh)
+    if (x > f(yHigh)) {
+      yHigh = yHigh * 2
+      continue
+    }
+    let yMid = (yLow + yHigh) / 2
+    if (f(yMid) < x) {
+      yLow = yMid
+    }
+    else {
+      yHigh = yMid
+    }
+  }
+  return (yLow + yHigh) / 2
+}
+{
+  let f = x => 1 / (1 + Math.exp(-x))
+  // console.log('inverse', inverse(0.5, f, 0.01))
+}
 
 export default {
   arithmeticProgression,
   ap,
+  range,
   chooseRandom,
   sigmoid,
   sleep,
@@ -466,5 +499,6 @@ export default {
   primeFactors,
   primePowersSmallerThanNumber,
   product,
-  cumulatePairs
+  cumulatePairs,
+  inverse
 }

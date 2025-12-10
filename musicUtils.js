@@ -1,7 +1,8 @@
 import utils from './utils.js'
 import axios from 'axios'
-import { create, all } from 'mathjs'
+import { create, all, randomInt } from 'mathjs'
 const math = create(all)
+// import Plotly from 'plotly.js-dist'
 
 
 let major = [0, 2, 4, 5, 7, 9, 11]
@@ -36,6 +37,7 @@ function snapToScale(i, scale) {
 }
 
 let freqToInt = f => Math.round(utils.logBase(2, f / (55 / 2)) * 12 - 3)
+function intToFreq(i) { return 2 ** ((i + 3) / 12) * 55 / 2 }
 
 /*
 make chord song where notes are played at the beginning of each bar, mostly, I want chords to be played at the most rational points, so out of 8, 0,4,2,6, then the rest
@@ -197,40 +199,40 @@ async function brjunoFunction(a) {
 }
 
 
-function selectOverOrUnderTone(inputFreq, choiceFloat, sideWidth, preOverlyingDistributionCurvature0, overlyingCurvature0) {
+function selectAmbiharmonic(inputFreq, choiceFloat, sideWidth, ambiharmonicCurvature0, overlyingCurvature0) {
   // console.log('input freq, choice float, side width', inputFreq, choiceFloat, sideWidth)
   let minFreq = 33//33 is the smallest freq that yields a positive freqToInt
-  let undertoneFractions = utils.ap(sideWidth + 1).slice(2).map(i => 1 / i).reverse()
-  let overtoneFractions = utils.ap(sideWidth + 1).slice(2)
-  let overAndUnderToneFractionList = utils.concatLists([undertoneFractions, [1], overtoneFractions])
-  let overAndUnderToneList = overAndUnderToneFractionList.map(f => inputFreq * f)
+  let subharmonicFractions = utils.ap(sideWidth + 1).slice(2).map(i => 1 / i).reverse()
+  let harmonicFractions = utils.ap(sideWidth + 1).slice(2)
+  let ambiharmonicFractionList = utils.concatLists([subharmonicFractions, [1], harmonicFractions])
+  let ambiharmonicList = ambiharmonicFractionList.map(f => inputFreq * f)
   let centralIndex = sideWidth - 1
-  let preOverlyingDistributionCurvature = preOverlyingDistributionCurvature0 / sideWidth
-  let overAndUnderToneProbabilityDistributionPreOverlyingDistribution = i => Math.exp(-((preOverlyingDistributionCurvature * (i - centralIndex)) ** 2))//bell curve for fractions
+  let ambiharmonicCurvature = ambiharmonicCurvature0 / sideWidth //maybe rename it as harmonicCurvature
+  let ambiharmonicProbabilityDistributionPreOverlyingDistribution = i => Math.exp(-((ambiharmonicCurvature * (i - centralIndex)) ** 2))//bell curve for fractions
   // console.log('over and undertone probability distribution pre overlying distribution', utils.ap(10).map(i => overAndUnderToneProbabilityDistributionPreOverlyingDistribution(i)))
   let overlyingCenter = Math.exp((Math.log(minFreq) + Math.log(15000)) / 2) //550
   let overlyingCurvature = overlyingCurvature0 / Math.log(overlyingCenter)
   let overlyingDistribution = freq => freq < minFreq || freq > 15000 ? 0 : Math.exp(-((overlyingCurvature * (Math.log(overlyingCenter) - Math.log(freq))) ** 2))//bell curve? maybe a very flat one, and then zero beyond endpoints
   // console.log('overlying distribution', utils.ap(10).map(i => [overlyingDistribution(2.1 ** i * 20), 2.1 ** i * 20]))
-  let unnormalizedOverAndUnderToneRelativeProbabilityPairs = overAndUnderToneList.map((overOrUnderTone, i) => {
-    let overAndUnderToneProbabilityPreOverlyingDistribution = overAndUnderToneProbabilityDistributionPreOverlyingDistribution(i)
-    let overlyingProbability = overlyingDistribution(overOrUnderTone)
-    let combinedProbability = overAndUnderToneProbabilityPreOverlyingDistribution * overlyingProbability
+  let unnormalizedAmbiharmonicRelativeProbabilityPairs = ambiharmonicList.map((ambiharmonic, i) => {
+    let ambiharmonicProbabilityPreOverlyingDistribution = ambiharmonicProbabilityDistributionPreOverlyingDistribution(i)
+    let overlyingProbability = overlyingDistribution(ambiharmonic)
+    let combinedProbability = ambiharmonicProbabilityPreOverlyingDistribution * overlyingProbability
     // console.log(overOrUnderTone, combinedProbability)
-    return [overOrUnderTone, combinedProbability]
+    return [ambiharmonic, combinedProbability]
   })
   // console.log('unnormalized over and undertone relative probability pairs', unnormalizedOverAndUnderToneRelativeProbabilityPairs)
-  let totalRelativeProbabilities = utils.sum(unnormalizedOverAndUnderToneRelativeProbabilityPairs.map(pair => pair[1]))
-  let normalizedOverAndUnderToneProbabilityPairs = unnormalizedOverAndUnderToneRelativeProbabilityPairs.map(pair => {
-    let overOrUnderTone = pair[0]
+  let totalRelativeProbabilities = utils.sum(unnormalizedAmbiharmonicRelativeProbabilityPairs.map(pair => pair[1]))
+  let normalizedAmbiharmonicProbabilityPairs = unnormalizedAmbiharmonicRelativeProbabilityPairs.map(pair => {
+    let ambiharmonic = pair[0]
     let relativeProbability = pair[1]
     let probability = relativeProbability / totalRelativeProbabilities
-    return [overOrUnderTone, probability]
+    return [ambiharmonic, probability]
   })
   // console.log('normalized over and undertone probability pairs', normalizedOverAndUnderToneProbabilityPairs)
-  let cumulatedOverAndUnderToneProbabilityPairs = utils.cumulatePairs(normalizedOverAndUnderToneProbabilityPairs)
+  let cumulatedAmbiharmonicProbabilityPairs = utils.cumulatePairs(normalizedAmbiharmonicProbabilityPairs)
   // console.log('cumulated over and undertone probability pairs', cumulatedOverAndUnderToneProbabilityPairs)
-  let chosenPair = cumulatedOverAndUnderToneProbabilityPairs.find(pair => pair[1] > choiceFloat)
+  let chosenPair = cumulatedAmbiharmonicProbabilityPairs.find(pair => pair[1] > choiceFloat)
   // console.log('chosenPair', chosenPair)
   let chosenFreq = chosenPair[0]
   // console.log(freqToInt(33)) //33 is the smallest freq that yields a positive freqToInt
@@ -241,9 +243,72 @@ function selectOverOrUnderTone(inputFreq, choiceFloat, sideWidth, preOverlyingDi
   let len = 22//9
   let choiceFloats = utils.randomFloats('lol', len)
   let inputFreqs = utils.randomFloats('lol2', len).map(r => r * 550)
-  let preOverlyingDistributionCurvature = 2
+  let ambiharmonicCurvature = 2
   let overlyingCurvature = 2
-  console.log('selected over and undertones', utils.zipWith((choiceFloat, inputFreq) => [inputFreq, selectOverOrUnderTone(inputFreq, choiceFloat, sideWidth, preOverlyingDistributionCurvature, overlyingCurvature)], choiceFloats, inputFreqs))
+  console.log('selected ambiharmonics', utils.zipWith((choiceFloat, inputFreq) => [inputFreq, selectAmbiharmonic(inputFreq, choiceFloat, sideWidth, ambiharmonicCurvature, overlyingCurvature)], choiceFloats, inputFreqs))
+}
+// console.log(undefined[0])
+
+/*
+I want there also to be a chance of picking a non-harmonic frequency
+in generateOverOrUnderTone? maybe I want in that to be a distribution of tones to pick from, randomness argument controls sharpness of spikes, whereas preOverlyingDistributionCurvature controls the amplitudes, call it something else, harmonicCurvature
+*/
+//from https://www.desmos.com/calculator/8fnpixtvfs and https://www.desmos.com/calculator/axccpeiytk
+function selectSomewhatAmbiharmonic(inputFreq, choiceFloat, sideWidth, randomness, ambiharmonicCurvature, overlyingCurvature) {
+  let sharpness = randomness//these be the same thing
+  let c = sharpness
+  let w = sideWidth
+  let minFreq = 33
+  let maxFreq = 15000
+  let o = Math.exp((Math.log(minFreq) + Math.log(maxFreq)) / 2)
+  let ambiharmonicDistribution = x => Math.exp(-((ambiharmonicCurvature * Math.log(o / x)) ** 2))
+  let overlyingDistribution = freq => freq < minFreq || freq > maxFreq ? 0 : Math.exp(-((overlyingCurvature * Math.log(o / freq)) ** 2))
+  let rightTermAmountMinusOne = k => w//Math.min(w, Math.ceil(maxFreq / (o * k)) + 1)
+  let leftTermAmountMinusOne = k => w//Math.min(w, Math.ceil(o * k / minFreq) + 1)
+  let F = (x, k, n2, n3) => Math.sqrt(Math.PI) * math.erf(c ** 2 * n3 * Math.log(x / (n2 * o * k))) / (2 * (c ** 2) * n3) * ambiharmonicDistribution(n2 * o * k) * overlyingDistribution(n2 * o * k)
+  let G = (x, k0) => F(x, k0, 1, 1)
+    + utils.sum(utils.range(2, rightTermAmountMinusOne(k0)).map(n => F(x, k0, n, n)))
+    + utils.sum(utils.range(2, leftTermAmountMinusOne(k0)).map(n => F(x, k0, 1 / n, n)))
+  let G2 = (x, k) => (G(x, k) / G(maxFreq, k) + 1) / 2
+  // let G3 = (x, k) => (maxFreq / minFreq) ** G2(x, k) * minFreq
+  // console.log('ambiharmonic distribution', ambiharmonicDistribution(100))
+  // console.log('overlying distribution', overlyingDistribution(100))
+  // let [a1, a2, a3, a4] = [3000, 1.74, 2.4, 2.4 ** ((-1) ** 2)]
+  // console.log('F', F(a1, a2, a3, a4))
+  let k = inputFreq / o
+  // console.log('here')
+  // console.log(rightTermAmountMinusOne(k))
+  // console.log(leftTermAmountMinusOne(k))
+  // let plotlyDiv = document.getElementById('plotlyDiv')
+  // console.log('G', G(maxFreq, k))
+  // console.log('F', F(maxFreq, k, 1, 1))
+  // let rangeLeftEdge = Math.max(minFreq, 1 / (w + 1) * o * k)
+  // let rangeRightEdge = Math.min(maxFreq, (w + 1) * o * k)
+  // let floatInRange = (rangeRightEdge / rangeLeftEdge) ** (choiceFloat) * rangeLeftEdge
+  //these do seem to work
+  // console.log('range left edge', rangeLeftEdge)
+  // console.log('range right edge', rangeRightEdge)
+  // console.log('float in range', floatInRange)
+  // return G3(floatInRange, k)
+  let G4 = x => G2(x, k)
+  return utils.inverse(choiceFloat, G4, 0.11)
+}
+{
+  let inputFreq = 703.562363974//700
+  let choiceFloat = 0.5
+  let sideWidth = 11//9
+  let randomness = 2
+  let ambiharmonicCurvature = 0.5
+  let overlyingCurvature = 0.5
+  let ambiharmonicAmount = 22//9//22
+  // console.log(selectSomewhatAmbiharmonic(inputFreq, choiceFloat, sideWidth, randomness, harmonicCurvature, overlyingCurvature))
+  /*
+  console.log('select somewhat ambiharmonic', utils.zipWith(
+    (freq, choiceFloat) => [freq, choiceFloat, selectSomewhatAmbiharmonic(freq, choiceFloat, sideWidth, randomness, ambiharmonicCurvature, overlyingCurvature)],
+    utils.randomFloats('lol', ambiharmonicAmount).map(f => (15000 / 33) ** f * 33),
+    utils.randomFloats('lol2', ambiharmonicAmount)
+  ))
+  //*/
 }
 // console.log(undefined[0])
 
@@ -733,13 +798,13 @@ async function lel() {
 }
 lel()
 
-function generateOverAndUnderToneSequence(seed, sideWidth, preOverlyingDistributionCurvature, overlyingCurvature, choiceFloats) {
+function generateAmbiharmonicSequence(seed, sideWidth, ambiharmonicCurvature, overlyingCurvature, choiceFloats) {
   let len = choiceFloats.length
-  let initialFreq = Math.exp(utils.randomFloat(seed)) / Math.exp(1) * 550
-  let freqs = [550]//[initialFreq]
+  let initialFreq = (15000 / 33) ** utils.randomFloat(seed) * 33
+  let freqs = [initialFreq]
   for (let i in utils.ap(len)) {
     let inputFreq = freqs[i]
-    freqs.push(selectOverOrUnderTone(inputFreq, choiceFloats[i], sideWidth, preOverlyingDistributionCurvature, overlyingCurvature))
+    freqs.push(selectAmbiharmonic(inputFreq, choiceFloats[i], sideWidth, ambiharmonicCurvature, overlyingCurvature))
   }
   return freqs
 }
@@ -747,11 +812,11 @@ function generateOverAndUnderToneSequence(seed, sideWidth, preOverlyingDistribut
   let seed = 'lol'
   let sideWidth = 9
   let len = 44
-  let preOverlyingDistributionCurvature = 2
+  let ambiharmonicCurvature = 2
   let overlyingCurvature = 2
   let choiceFloats = randomFloatContinuum(0.5, len, 1, seed)
   // console.log('choice floats', choiceFloats)
-  console.log('generate over and undertone sequence', generateOverAndUnderToneSequence(seed, sideWidth, preOverlyingDistributionCurvature, overlyingCurvature, choiceFloats))
+  console.log('generate ambiharmonic sequence', generateAmbiharmonicSequence(seed, sideWidth, ambiharmonicCurvature, overlyingCurvature, choiceFloats))
 }
 {
   // let rs = randomFloatContinuum(0.1, 99, 4, 'lol')
@@ -762,13 +827,130 @@ function generateOverAndUnderToneSequence(seed, sideWidth, preOverlyingDistribut
 }
 // console.log(undefined[0])
 
+function generateAmbiharmonicSequenceFromInputFreq(inputFreq, sideWidth, ambiharmonicCurvature, overlyingCurvature, choiceFloats) {
+  let len = choiceFloats.length
+  let freqs = [inputFreq]
+  for (let i in utils.ap(len)) {
+    let previousFreq = freqs[i]
+    freqs.push(selectAmbiharmonic(previousFreq, choiceFloats[i], sideWidth, ambiharmonicCurvature, overlyingCurvature))
+  }
+  return freqs
+}
+
+//I could take the last element of generateAmbiharmonicSequence
+function generateReambiharmonic(inputFreq, seed, sideWidth, ambiharmonicCurvature, overlyingCurvature, iterations) {
+  let choiceFloats = randomFloatContinuum(0.5, iterations, 1, seed)
+  let ambiharmonicSequence = generateAmbiharmonicSequenceFromInputFreq(inputFreq, sideWidth, ambiharmonicCurvature, overlyingCurvature, choiceFloats)
+  let lastAmbiharmonic = ambiharmonicSequence[ambiharmonicSequence.length - 1]
+  return lastAmbiharmonic
+}
+{
+  console.log('generate reambiharmonic', utils.ap(9).map(i => generateReambiharmonic(1000, 'lol' + i, 9, 4, 2, 5)))
+}
+// console.log(undefined[0])
+
+// console.log(randomIntContinuum(0, 9, 0.5, 1, 32, 'lol')); console.log(undefined[0]) //testing how long a sequence randomIntContinuum generates
+
+function generateReambiharmonicSequence(seed, sideWidth, ambiharmonicCurvature, overlyingCurvature, len, iterations) {
+  let loopLength = 32
+  let seeds = randomIntContinuum(0, 999, 0.1, Math.ceil(len / loopLength), loopLength, seed).map(i => i.toString())
+  let initialFreq = (15000 / 33) ** utils.randomFloat(seed) * 33
+  let freqs = [initialFreq]
+  for (let i in utils.ap(len)) {
+    let previousFreq = freqs[i]
+    freqs.push(generateReambiharmonic(previousFreq, seeds[i], sideWidth, ambiharmonicCurvature, overlyingCurvature, iterations))
+  }
+  return freqs
+}
+console.log('generate reambiharmonic sequence', generateReambiharmonicSequence('lol', 9, 4, 2, 9, 5))
+// console.log(undefined[0])
+
+//into looping incorporate ambiharmonicity, maybe all the mutations will be somewhatAmbiharmonic2 or reambiharmonic, and also the beginning and end loops be ambiharmonicSequences
+//totalDuration is the length of the resulting list
+function ambiharmonicLoopContinuum(randomness, seed, loopLength, totalDuration, choiceFloats, sideWidth, ambiharmonicCurvature, overlyingCurvature, iterations) {
+  let startLoop = generateReambiharmonicSequence(seed, sideWidth, ambiharmonicCurvature, overlyingCurvature, loopLength, iterations)
+  let continuum = startLoop
+  for (let i of utils.ap(totalDuration)) {
+    let choiceFloat = choiceFloats[i]
+    let elementLoopLengthAway = continuum[i]
+    let mutationProbability = randomness * 1 / loopLength
+    let newElement = choiceFloat < mutationProbability ? generateReambiharmonic(elementLoopLengthAway, seed + ' ' + i, sideWidth, ambiharmonicCurvature, overlyingCurvature, iterations) : elementLoopLengthAway
+    continuum.push(newElement)
+  }
+  return continuum
+}
+{
+  let randomness = 0.1
+  let seed = 'lol'
+  let loopLength = 32
+  let totalDuration = 999
+  let choiceFloats = randomFloatContinuum(randomness, totalDuration / loopLength, loopLength, seed)
+  let sideWidth = 9
+  let ambiharmonicCurvature = 4
+  let overlyingCurvature = 2
+  let iterations = 5
+  console.log('ambiharmonic loop continuum', ambiharmonicLoopContinuum(randomness, seed, loopLength, totalDuration, choiceFloats, sideWidth, ambiharmonicCurvature, overlyingCurvature, iterations))
+}
+// console.log(undefined[0])
+
+//just generate on average ambiharmonics but sometimes generate freqs that are just a little bit off
+function generateSomewhatAmbiharmonicSequence2(seed, sideWidth, ambiharmonicCurvature, overlyingCurvature, choiceFloats) {
+  let len = choiceFloats.length
+  let detuningFloats = randomFloatContinuum()
+  let initialFreq = (15000 / 33) ** utils.randomFloat(seed) * 33
+  let freqs = [initialFreq]
+  for (let i in utils.ap(len)) {
+    let inputFreq = freqs[i]
+    freqs.push(selectAmbiharmonic(inputFreq, choiceFloats[i], sideWidth, ambiharmonicCurvature, overlyingCurvature))
+  }
+  return freqs
+}
+{
+  let seed = 'lol'
+  let sideWidth = 9
+  let len = 44
+  let ambiharmonicCurvature = 2
+  let overlyingCurvature = 2
+  let choiceFloats = randomFloatContinuum(0.5, len, 1, seed)
+  // console.log('choice floats', choiceFloats)
+  console.log('generate ambiharmonic sequence', generateAmbiharmonicSequence(seed, sideWidth, ambiharmonicCurvature, overlyingCurvature, choiceFloats))
+}
+
+function generateSomewhatAmbiharmonicSequence(seed, sideWidth, randomness, ambiharmonicCurvature, overlyingCurvature, choiceFloats) {
+  let len = choiceFloats.length
+  let initialFreq = (15000 / 33) ** utils.randomFloat(seed) * 33
+  let freqs = [initialFreq]
+  for (let i in utils.ap(len)) {
+    let inputFreq = freqs[i]
+    let choiceFloat = choiceFloats[i]
+    let newFreq = selectSomewhatAmbiharmonic(inputFreq, choiceFloat, sideWidth, randomness, ambiharmonicCurvature, overlyingCurvature)
+    freqs.push(newFreq)
+  }
+  return freqs
+}
+{
+  let seed = 'lol'
+  let sideWidth = 9
+  let len = 44
+  let ambiharmonicCurvature = 0.5
+  let overlyingCurvature = 0.5
+  let choiceFloats = randomFloatContinuum(0.5, len, 1, seed)
+  let randomness = 0.1
+  // console.log('choice floats', choiceFloats)
+  console.log('generate somewhat ambiharmonic sequence', generateSomewhatAmbiharmonicSequence(seed, sideWidth, randomness, ambiharmonicCurvature, overlyingCurvature, choiceFloats))
+  // console.log('generate somewhat ambiharmonic sequence', generateSomewhatAmbiharmonicSequence('38', 9, 3, 4, 2, randomFloatContinuum(0.1, 99 * (8 + 1), 32, '38')))
+}
+// console.log(undefined[0])
+
 //maybe just pick a random harmonic of a random previous tone
 //favor self tone by 1/2 probability, do a cumulation
-function generateMultiHarmonicSequences(sequenceAmount, randomness, len, sideWidth, preOverlyingDistributionCurvature, overlyingCurvature, seed) {
+function generateMultiambiharmonicSequences(sequenceAmount, randomness, len, sideWidth, ambiharmonicCurvature, overlyingCurvature, seed) {
   let loopLength = 32
   let toneChoiceFloatColumns = utils.zipLists(utils.ap(sequenceAmount).map(i => randomFloatContinuum(randomness, len / loopLength, loopLength, seed + ' ' + i)))
-  let harmonicChoiceFloatColumns = utils.zipLists(utils.ap(sequenceAmount).map(i => randomFloatContinuum(randomness, len / loopLength, loopLength, seed + ' lol ' + i)))
-  let multiHarmonicSequenceColumns = [utils.randomFloats(seed, sequenceAmount).map(f => Math.pow(15000 / 33, f) * 33)] //initializing
+  let ambiharmonicChoiceFloatColumns = utils.zipLists(utils.ap(sequenceAmount).map(i => randomFloatContinuum(randomness, len / loopLength, loopLength, seed + ' lol ' + i)))
+  // let initialFreqs = utils.randomFloats(seed, sequenceAmount).map(f => (15000 / 33) ** f * 33)
+  let initialFreqs = generateAmbiharmonicSequence(seed, sideWidth, ambiharmonicCurvature, overlyingCurvature, utils.randomFloats(seed, sequenceAmount))
+  let multiambiharmonicSequenceColumns = [initialFreqs]
   // console.log(len / loopLength)
   // console.log('tone choice float columns', toneChoiceFloatColumns)
   // console.log('harmonic choice float columns', harmonicChoiceFloatColumns)
@@ -778,34 +960,34 @@ function generateMultiHarmonicSequences(sequenceAmount, randomness, len, sideWid
     // console.log('i', i)
     // console.log('multiharmonic sequence columns', multiHarmonicSequenceColumns[i])
     let toneChoiceFloatColumn = toneChoiceFloatColumns[i]
-    let harmonicChoiceFloatColumn = harmonicChoiceFloatColumns[i]
-    let previousMultiHarmonicSequenceColumn = multiHarmonicSequenceColumns[i]
+    let ambiharmonicChoiceFloatColumn = ambiharmonicChoiceFloatColumns[i]
+    let previousMultiambiharmonicSequenceColumn = multiambiharmonicSequenceColumns[i]
     // console.log('tone choice float column', toneChoiceFloatColumn)
     // console.log('harmonic choice float column', harmonicChoiceFloatColumn)
     // console.log('previous multiharmonic sequence column', previousMultiHarmonicSequenceColumn)
     // utils.zipWithMany((a,b) => {console.log('lol')},[1,2])
     // console.log(undefined[0])
-    let multiHarmonicSequenceColumn = utils.zipWithMany((toneChoiceFloat, harmonicChoiceFloat, j) => {
+    let multiambiharmonicSequenceColumn = utils.zipWithMany((toneChoiceFloat, ambiharmonicChoiceFloat, j) => {
       // console.log('in multiharmonic sequence column')
       let toneIndex = j
-      let toneProbabilityPairs = previousMultiHarmonicSequenceColumn.map((tone, k) => [tone, k == toneIndex ? 1 / 2 : 1 / (sequenceAmount - 1)])
+      let toneProbabilityPairs = previousMultiambiharmonicSequenceColumn.map((tone, k) => [tone, k == toneIndex ? 1 / 2 : 1 / (sequenceAmount - 1)])
       let toneCumulationPairs = utils.cumulatePairs(toneProbabilityPairs)
       //I need two floats, one for selecting the tone, another for selecting its harmonic
-      let toneToSelectHarmonicFor = toneCumulationPairs.find(pair => pair[1] > toneChoiceFloat)[0]
-      let harmonic = selectOverOrUnderTone(toneToSelectHarmonicFor, harmonicChoiceFloat, sideWidth, preOverlyingDistributionCurvature, overlyingCurvature)
-      return harmonic
+      let toneToSelectAmbiharmonicFor = toneCumulationPairs.find(pair => pair[1] > toneChoiceFloat)[0]
+      let ambiharmonic = selectAmbiharmonic(toneToSelectAmbiharmonicFor, ambiharmonicChoiceFloat, sideWidth, ambiharmonicCurvature, overlyingCurvature)
+      return ambiharmonic
     }
-      , [toneChoiceFloatColumn, harmonicChoiceFloatColumn, utils.ap(sequenceAmount)])
+      , [toneChoiceFloatColumn, ambiharmonicChoiceFloatColumn, utils.ap(sequenceAmount)])
     // console.log('multiharmonic sequence column', multiHarmonicSequenceColumn)
     // console.log(undefined[0])
-    multiHarmonicSequenceColumns.push(multiHarmonicSequenceColumn)
+    multiambiharmonicSequenceColumns.push(multiambiharmonicSequenceColumn)
   }
-  // console.log(multiHarmonicSequenceColumns.length)
+  // console.log(multiambiharmonicSequenceColumns.length)
   // console.log(undefined[0])
-  return utils.zipLists(multiHarmonicSequenceColumns)
+  return utils.zipLists(multiambiharmonicSequenceColumns)
 }
 // console.log('generate multiharmonic sequences'); generateMultiHarmonicSequences(5, 0.1, 3, 9, 5, 2, 'lol')
-console.log('generate multiharmonic sequences', generateMultiHarmonicSequences(5, 0.1, 3, 9, 5, 2, 'lol'))
+console.log('generate multiambiharmonic sequences', generateMultiambiharmonicSequences(5, 0.1, 3, 9, 5, 2, 'lol'))
 
 
 //if I pick a numeric seed, it might fuck some seed stuff up by introducing same seeds for different parts, but that might just be a feature rather than a bug
@@ -819,8 +1001,9 @@ export default {
   chromatic,
   snapToScale,
   freqToInt,
+  intToFreq,
   measureOfPowerOfTwo,
-  selectOverOrUnderTone,
+  selectAmbiharmonic,
   drumFiles,
   makeDrumBeat,
   mixLists,
@@ -833,6 +1016,10 @@ export default {
   listPartitionedByRelativeAmounts,
   mapDrumPatternToDrumPartitions,
   departitionDrumPartitionPattern,
-  generateOverAndUnderToneSequence,
-  generateMultiHarmonicSequences
+  generateAmbiharmonicSequence,
+  generateReambiharmonic,
+  generateReambiharmonicSequence,
+  ambiharmonicLoopContinuum,
+  generateSomewhatAmbiharmonicSequence,
+  generateMultiambiharmonicSequences
 }

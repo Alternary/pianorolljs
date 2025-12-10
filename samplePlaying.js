@@ -86,6 +86,15 @@ async function playSampleLoopinglyAtOffset(samplePath, times, duration, offset =
   }
 }
 
+function playFreq(filepath, freq, duration, offset, gain = 0.1, pan = 0) {
+  let i = musicUtils.freqToInt(freq)
+  if (freq < 33 || freq > 15000 || i > 96) {
+    return
+  }
+  let rate = freq / musicUtils.intToFreq(i)
+  playSample(filepath + i + '.mp3', duration, offset, gain, pan, rate)
+}
+
 
 let audio
 let bassAudio
@@ -233,6 +242,7 @@ function playSweep(time) {
 export default {
   tweakGain,
   playEffect,
+  playFreq,
   drumFiles,
   bassSamples,
   audio,
