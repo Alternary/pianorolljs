@@ -5,6 +5,15 @@ import { create, all } from 'mathjs'
 const math = create(all)
 // import { sqrt } from 'mathjs'
 // console.log(sqrt(-4))
+//import Plotly from 'plotly.js-dist'
+let plotlyUtils
+if (typeof window !== 'undefined') {
+  import('./plotlyUtils.js')
+    .then(plotlyUtils0 => {
+      plotlyUtils = plotlyUtils0
+    })
+}
+// plotlyUtils.plot(Math.sin, [1, 2, 3, 4, 5, 6, 7, 8, 9])
 
 const arithmeticProgression = n => n < 0 ? [] : Array.from(Array(n)).map((x, i) => i)
 const ap = arithmeticProgression
@@ -461,6 +470,48 @@ function inverse(x, f, tolerance) {
   // console.log('inverse', inverse(0.5, f, 0.01))
 }
 
+//i is the number suffix included in the filename
+async function saveAndReturnPattern(suffixI, funcNum, seed, randomness, komplexW, start, end, duration, loopLength) {
+  let patternNumbers
+  let patternFilenamesWithoutSuffix = [
+    /*0*/'chainContinuumDrum0', //seed randomness
+    /*1*/'multiContinuumDrum0', //seed randomness
+    /*2*/'multiContinuumFloat00', //seed randomness
+    /*3*/'komplexFloats', //w seed
+    /*4*/'komplexContinuumFloats0', //w seed randomness
+    /*5*/'permutationReplacementIntContinuum', //start end seed randomness duration loopLength
+    /*6*/'permutationReplacementDrumContinuum', //seed randomness duration loopLength
+    /*7*/'granaryDrumPattern' //seed
+  ]
+  let patternFilename = patternFilenamesWithoutSuffix[funcNum] + suffixI
+  try {
+    await axios.post('http://localhost:3001/shellCommandUnsynced', { body: `/home/bruh/k/haskle/aural-calculator/src/main ${patternFilename + '.json'} ${funcNum} ${seed} ${randomness} ${komplexW} ${start} ${end} ${duration} ${loopLength} &` })
+    await sleep(1000)
+  }
+  catch (err) {
+    console.log('errored with error', err)
+  }
+  // await sleep(1000)
+  await axios.post('http://localhost:3001/readFile', { body: `/home/bruh/k/testdir/interactjs-lol/patterns/${patternFilename}.json` })
+    .then(text => {
+      patternNumbers = text.data
+    })
+  return patternNumbers
+}
+{
+  let suffixI = 0
+  let funcNum = 7//0//1//0//6
+  let seed = 0
+  let randomness = 0.03
+  let komplexW = 1000
+  let start = 0
+  let end = 96
+  let duration = 999
+  let loopLength = 32
+  // let response = await saveAndReturnPattern(suffixI, funcNum, seed, randomness, komplexW, start, end, duration, loopLength)
+  // console.log(response)
+}
+
 export default {
   arithmeticProgression,
   ap,
@@ -500,5 +551,6 @@ export default {
   primePowersSmallerThanNumber,
   product,
   cumulatePairs,
-  inverse
+  inverse,
+  saveAndReturnPattern
 }

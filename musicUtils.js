@@ -2,7 +2,13 @@ import utils from './utils.js'
 import axios from 'axios'
 import { create, all, randomInt } from 'mathjs'
 const math = create(all)
-// import Plotly from 'plotly.js-dist'
+let plotlyUtils
+if (typeof window !== 'undefined') {
+  import('./plotlyUtils.js')
+    .then(plotlyUtils0 => {
+      plotlyUtils = plotlyUtils0
+    })
+}
 
 
 let major = [0, 2, 4, 5, 7, 9, 11]
@@ -198,6 +204,14 @@ async function brjunoFunction(a) {
   return response.data[index]
 }
 
+/*how do I choose frequencies?
+I generate random frequencies and then I check whether a choiceFloat is smaller than the brjunoFunction at that point*/
+async function generateBrjunoFrequencies() {
+  let initialFrequenciess = utils.zipLists(utils.ap(melodAmount).map(i => randomFloatContinuum(randomness, 999, 32, seed + ' ' + i)))
+  let choiceFloatss = utils.zipLists(utils.ap(melodyAmount).map(i => randomFloatContinuum(randomness, 999, 32, seed + ' ' + i)))
+  return utils.zipWith((initialFrequencies, choiceFloats) => utils.zipWith(async (initialFrequency, choiceFloat) => { let b = await brjunoFunction(initialFrequency); choiceFloat < b ? initialFrequency : 0 }, initialFrequencies, choiceFloats), initialFrequenciess, choiceFloatss)
+}
+
 
 function selectAmbiharmonic(inputFreq, choiceFloat, sideWidth, ambiharmonicCurvature0, overlyingCurvature0) {
   // console.log('input freq, choice float, side width', inputFreq, choiceFloat, sideWidth)
@@ -279,7 +293,6 @@ function selectSomewhatAmbiharmonic(inputFreq, choiceFloat, sideWidth, randomnes
   // console.log('here')
   // console.log(rightTermAmountMinusOne(k))
   // console.log(leftTermAmountMinusOne(k))
-  // let plotlyDiv = document.getElementById('plotlyDiv')
   // console.log('G', G(maxFreq, k))
   // console.log('F', F(maxFreq, k, 1, 1))
   // let rangeLeftEdge = Math.max(minFreq, 1 / (w + 1) * o * k)
@@ -311,6 +324,16 @@ function selectSomewhatAmbiharmonic(inputFreq, choiceFloat, sideWidth, randomnes
   //*/
 }
 // console.log(undefined[0])
+{
+  // plotlyUtils.plot(x => Math.cos(x), utils.range(1, 100).map(i => i / 100))
+}
+// console.log(undefined[0])
+
+//I also want to calculate an ambiharmonic from the neighborhood of a point in a loop, maybe through using somewhatMultiambiharmonic, which relies on the desmos graph
+//the neighborhood should include future elements as well, so there should be a variable neghborhoodWidth=7, future elements meaning past elements with with bigger indices in the cycled loop, so in [1,2,3,4,5] 4 has future elements 5 and 1 and past elements 2 and 3
+//https://www.desmos.com/calculator/udqyg02bng
+function generateAmbiharmonicFromInputFreqs() {
+}
 
 //this is just akin to random bits isn't it?
 function generateAlternation(seed, len) {
@@ -865,6 +888,19 @@ function generateReambiharmonicSequence(seed, sideWidth, ambiharmonicCurvature, 
 console.log('generate reambiharmonic sequence', generateReambiharmonicSequence('lol', 9, 4, 2, 9, 5))
 // console.log(undefined[0])
 
+//just generate an ambiharmonic sequence which you play as bass and generate reambiharmonics of that backbone to play as melodies
+function generateBackbonedReambiharmonicSequences(offshootAmount, len, sideWidth, ambiharmonicCurvature, overlyingCurvature, seed, iterations) {
+  let backbone = generateReambiharmonicSequence(seed, sideWidth, ambiharmonicCurvature, overlyingCurvature, len, iterations)
+  let offshoots = utils.ap(offshootAmount).map(i => backbone.map(freq => generateReambiharmonic(freq, seed + ' ' + i, sideWidth, ambiharmonicCurvature, overlyingCurvature, iterations)))
+  // console.log('offshoots', offshoots)
+  // console.log('backbone', backbone)
+  return offshoots.concat([backbone])
+}
+{
+  console.log('generate backboned reambiharmonic sequences', generateBackbonedReambiharmonicSequences(4, 5, 9, 5, 2, 'lol', 5))
+}
+// console.log(undefined[0])
+
 //into looping incorporate ambiharmonicity, maybe all the mutations will be somewhatAmbiharmonic2 or reambiharmonic, and also the beginning and end loops be ambiharmonicSequences
 //totalDuration is the length of the resulting list
 function ambiharmonicLoopContinuum(randomness, seed, loopLength, totalDuration, choiceFloats, sideWidth, ambiharmonicCurvature, overlyingCurvature, iterations) {
@@ -1019,6 +1055,7 @@ export default {
   generateAmbiharmonicSequence,
   generateReambiharmonic,
   generateReambiharmonicSequence,
+  generateBackbonedReambiharmonicSequences,
   ambiharmonicLoopContinuum,
   generateSomewhatAmbiharmonicSequence,
   generateMultiambiharmonicSequences
