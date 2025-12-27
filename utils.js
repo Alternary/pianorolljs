@@ -8,12 +8,20 @@ const math = create(all)
 //import Plotly from 'plotly.js-dist'
 let plotlyUtils
 if (typeof window !== 'undefined') {
-  import('./plotlyUtils.js')
-    .then(plotlyUtils0 => {
-      plotlyUtils = plotlyUtils0
-    })
+  const { default: plotlyUtils0 } = await import('./plotlyUtils.js')
+  plotlyUtils = plotlyUtils0
+  // import('./plotlyUtils.js')
+  //   .then(plotlyUtils0 => {
+  //     console.log('importing')
+  //     plotlyUtils = plotlyUtils0
+  //     console.log(plotlyUtils)
+  //     // plotlyUtils.plotBetween(x => Math.sin(x), 0, 1, 9, false, false)
+  //   })
 }
-// plotlyUtils.plot(Math.sin, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+if (plotlyUtils != undefined) {
+  // plotlyUtils.plot(Math.sin, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+  plotlyUtils.plotBetween(x => Math.sin(9 * x), 0, 1, 9, false, false)
+}
 
 const arithmeticProgression = n => n < 0 ? [] : Array.from(Array(n)).map((x, i) => i)
 const ap = arithmeticProgression
@@ -512,6 +520,16 @@ async function saveAndReturnPattern(suffixI, funcNum, seed, randomness, komplexW
   // console.log(response)
 }
 
+async function plotBetween(f, start, end, xAmount, xLogarithmic, yLogarithmic) {
+  let plotlyUtils
+  import('./plotlyUtils.js')
+    .then(plotlyUtils0 => {
+      plotlyUtils = plotlyUtils0
+      plotlyUtils.plotBetween(f, start, end, xAmount, xLogarithmic, yLogarithmic)
+    })
+}
+// plotlyUtils.plotBetween(x => Math.sin(x), 0, 1, 9, false, false)
+
 export default {
   arithmeticProgression,
   ap,
@@ -552,5 +570,6 @@ export default {
   product,
   cumulatePairs,
   inverse,
-  saveAndReturnPattern
+  saveAndReturnPattern,
+  plotBetween
 }

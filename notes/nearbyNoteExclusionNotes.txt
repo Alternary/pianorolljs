@@ -1,0 +1,10 @@
+the distance between notes should be in relation to future loop notes, past loop notes and previousCurrentColumnNotes
+with a bell curve distribution for temporality in loopContinuum and constant distribution with respect to the previousCurrentColumnNotes
+
+now, to pick a note that is far away from a set of notes with with certain weights
+it could be the inverted bell curve distribution
+or, in multiambiharmonic, having the inverted bell curve distribution multiplying the ambiharmonics. if the ambiharmonicDistribution has the same curvature, then they cancel each other out, leaving only overlyingDistribution, but I could just have the nearbyNoteExclusionDistribution be its own thing alongside ambiharmonicDistribution
+I could, for example, have the list [[1,2],[3],[5,6]]
+then I need to apply temporalDistribution, which is a bell curve, to arrive at something like [[[1,0.25],[2,0.25]],[[3,0.5]],[[5,0.25],[6,0.25]]], call that list the noteTemporalProbabilityPairs
+and then calculate the ambiharmonic lists for them using ambiharmonicDistribution
+then multiply each ambiharmonic's ambiharmonicDistributionProbability by nearbyNoteExclusionDistribution of every note in noteTemporalProbabilityPairs with the temporal probability element being the weight in the multiplication, that is, the amplitude of the inverse bell curve with which notes are multiplied, the inverse bell curve tapering off at 1 on each side and having a minimum somewhere above (0,0), precisely at (1 - amplitude) where amplitude is the amplitude given to the inverse bell curve

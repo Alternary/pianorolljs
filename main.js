@@ -12,6 +12,25 @@ import musicUtils from './musicUtils.js'
 import effex from './effex.js'
 import songs from './songs.js'
 import samplePlaying from './samplePlaying.js'
+import sampler from './sampler.js'
+// import plotlyUtils from './plotlyUtils.js'
+// const { default: plotlyUtils } = await import('./plotlyUtils.js')
+// import(typeof window !== 'undefined' ? './plotlyUtils.js' : './utils').then(plotlyUtils => { plotlyUtils.plotBetween(x => Math.sin(x), 1, 2, 9, false, false) })
+let plotlyUtils
+if (typeof window !== 'undefined') {
+  // console.log('lol')
+  // import('./plotlyUtils.js')
+  //   .then(plotlyUtils0 => {
+  //     console.log('importing')
+  //     plotlyUtils = plotlyUtils0
+  //   })
+  const { default: plotlyUtils0 } = await import('./plotlyUtils.js')
+  plotlyUtils = plotlyUtils0
+  // let { plotBetween } = await import('./plotlyUtils.js')
+  // console.log('plotBetween', plotBetween)
+  // plotBetween(x => Math.sin(x), 1, 2, 9, false, false)
+  // plotlyUtils.plotBetween(x => Math.sin(x), 1, 2, 9, false, false)
+}
 
 class SimpleGainWorklet {
   constructor() {
@@ -483,41 +502,41 @@ let audio
 const vzooms = [1 / 4, 1]
 const hzooms = [1 / (4 * 4 * 4 * 9), 1 / (4 * 4 * 4), 1 / (4 * 4), 1 / 4, 1, 4, 4 * 4]
 let instructions = document.getElementById('instructions')
-instructions.innerHTML = "<b>enter adds note, a logs notes, ijkl zoom, s resets zoom, 1234567890 play samples, d plays drum pattern, g plays melody, h plays sample pattern, q plays effects, w changes q's parameter, e plays effected sample, r plays ambience, t plays sampleSong2, y plays chordSong, u plays chordy sample song, o tests command, p plays chordy partitioned sample song, å plays chordy partitioned sample song 2, z plays chordy partitioned sample song 3, x plays more chordy song, c plays ambiharmonic song, v plays multiambiharmonic song, b plays testPlayFreq</b>"
+instructions.innerHTML = "<b>M adds note, A logs notes, IJKL zoom, S resets zoom, D plays drum pattern, G plays melody, H plays sample pattern, Q plays effects, W changes Q's parameter, E plays effected sample, R plays ambience, T plays sampleSong2, Y plays chordSong, O tests command, P plays chordy partitioned sample song, Å plays chordy partitioned sample song 2, Z plays chordy partitioned sample song 3, X plays more chordy song, C plays ambiharmonic song, V plays multiambiharmonic song, B plays testPlayFreq, > tests drill</b>"
 document.addEventListener('keydown', (event) => {
   switch (event.key) {
-    case 'Enter':
+    case 'M':
       addNote([140, 140, 20])
       break
-    case 'a':
+    case 'A':
       console.log(notes)
       console.log(gridWidth, gridHeight)
       audio = new Audio('./bassdrum.mp3')
       audio.play()
       break
     //ijkl
-    case 'l':
+    case 'L':
       hzoom = hzooms[hzooms.findIndex(z => z == hzoom) + 1] || hzoom
       applyZoom()
       break
-    case 'k':
+    case 'K':
       vzoom = vzooms[vzooms.findIndex(z => z == vzoom) + 1] || vzoom
       applyZoom()
       break
-    case 'j':
+    case 'J':
       hzoom = hzooms[hzooms.findIndex(z => z == hzoom) - 1] || hzoom
       applyZoom()
       break
-    case 'i':
+    case 'I':
       vzoom = vzooms[vzooms.findIndex(z => z == vzoom) - 1] || vzoom
       applyZoom()
       break
-    case 's':
+    case 'S':
       hzoom = 1
       vzoom = 1
       applyZoom()
       break
-    case '1':
+    /*case '1':
       audio = new Audio(musicUtils.drumFiles[0]); audio.volume = 0.2; audio.play(); break
     case '2':
       audio = new Audio(musicUtils.drumFiles[1]); audio.volume = 0.2; audio.play(); break
@@ -536,70 +555,74 @@ document.addEventListener('keydown', (event) => {
     case '9':
       audio = new Audio(musicUtils.drumFiles[8]); audio.volume = 0.2; audio.play(); break
     case '0':
-      audio = new Audio(musicUtils.drumFiles[9]); audio.volume = 0.2; audio.play(); break
-    case 'd':
+      audio = new Audio(musicUtils.drumFiles[9]); audio.volume = 0.2; audio.play(); break*/
+    case 'D':
       console.log(2)
       songs.playDrumPattern()
       break
-    case 'f':
-      break
-    case 'g':
+    case 'G':
       songs.playMelody()
       break
-    case 'h':
+    case 'H':
       songs.playSamplePattern()
       break
-    case 'q':
+    case 'Q':
       samplePlaying.playEffect(toggleSimpleGainWorklet)
       break
-    case 'w':
+    case 'W':
       samplePlaying.tweakGain(sendGainToSimpleGainWorklet)
       break
-    case 'e':
+    case 'E':
       effex.f()
       break
-    case 'r':
+    case 'R':
       songs.playAmbience()
       break
-    case 't':
+    case 'T':
       songs.playSampleSong2()
       break
-    case 'y':
+    case 'Y':
       songs.playChordSong()
       break
-    case 'u':
-      songs.playChordySampleSong()
-      break
-    case 'o':
+    case 'O':
       songs.testCommand()
       break
-    case 'p':
+    case 'P':
       songs.playChordyPartitionedSampleSong()
       break
-    case 'å':
+    case 'Å':
       songs.playChordyPartitionedSampleSong2()
       break
-    case 'z':
+    case 'Z':
       songs.playChordyPartitionedSampleSong3()
       break
-    case 'x':
+    case 'X':
       songs.playMoreChordySong()
       break
-    case 'c':
+    case 'C':
       songs.playAmbiharmonicSong()
       break
-    case 'v':
+    case 'V':
       songs.playMultiambiharmonicSong()
       break
-    case 'b':
+    case 'B':
       songs.testPlayFreq()
       break
-    case 'n':
+    case 'N':
+      sampler.sampler()
       break
-    case '<':
+    case '>':
+      songs.testDrill()
+      break
+    case 'U':
+      plotlyUtils.plotBetween(x => Math.sin(x * 9), -1, 1, 99, false, false)
+      break
+    case 'F':
       break
   }
 })
+
+// document.addEventListener('keyup', (event) => { console.log(event.key) })
 
 // document.addEventListener('keyup', (event) => {
 //   let drillTime = 0.3

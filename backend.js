@@ -45,12 +45,21 @@ app.post('/shellCommandUnsynced', (request, response) => {
   }
 })
 
-app.post('/saveFile', (request, response) => {
-})
-
 import fetch from 'file-fetch'
 import fs from 'node:fs'
 import eol from 'eol'
+
+app.post('/saveFile', (request, response) => {
+  let [filepath, data] = request.body.body
+  fs.writeFile(filepath, data, (err) => {
+    if (err) {
+      throw err
+    }
+    else {
+      console.log('saved file', filepath)
+    }
+  })
+})
 
 app.post('/readFile', (request, response) => {
   console.log('here is request', request.body.body)

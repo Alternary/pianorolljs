@@ -15,9 +15,18 @@ function plot(f, xs) {
     //type: 'scatter'
     mode: 'lines'
   }]
-  Plotly.newPlot('plotlyDiv', data)
+  // Plotly.newPlot('plotlyDiv', data)
+}
+
+const arithmeticProgression = n => n < 0 ? [] : Array.from(Array(n)).map((x, i) => i)
+const ap = arithmeticProgression
+
+function plotBetween(f, start, end, xAmount, xLogarithmic = false, yLogarithmic = false) {
+  let xs = ap(xAmount).map(i => i / (xAmount == 0 ? 1 : xAmount - 1) * (end - start) + start)
+  plot(f, xs)
 }
 
 export default {
-  plot
+  plot,
+  plotBetween
 }

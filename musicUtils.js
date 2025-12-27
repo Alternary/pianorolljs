@@ -4,12 +4,13 @@ import { create, all, randomInt } from 'mathjs'
 const math = create(all)
 let plotlyUtils
 if (typeof window !== 'undefined') {
-  import('./plotlyUtils.js')
-    .then(plotlyUtils0 => {
-      plotlyUtils = plotlyUtils0
-    })
+  const { default: plotlyUtils0 } = await import('./plotlyUtils.js')
+  plotlyUtils = plotlyUtils0
 }
-
+if (plotlyUtils != undefined) {
+  // plotlyUtils.plot(Math.sin, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+  plotlyUtils.plotBetween(x => Math.sin(9 * x), 0, 1, 9, false, false)
+}
 
 let major = [0, 2, 4, 5, 7, 9, 11]
 let pentatonic = [0, 2, 5, 7, 9]
@@ -900,6 +901,14 @@ function generateBackbonedReambiharmonicSequences(offshootAmount, len, sideWidth
   console.log('generate backboned reambiharmonic sequences', generateBackbonedReambiharmonicSequences(4, 5, 9, 5, 2, 'lol', 5))
 }
 // console.log(undefined[0])
+
+/*
+how do I create a simple function that promotes large distances between notes?
+generate first a baseline backbone, then generate an offshoot that is preferably far from the backbone, then generate another offshoot that is preferably far from the backbone and the previous offshoot
+the function to generate an ambiharmonic far from the other tones with respect to weights should be
+*/
+function generateAmbiharmonicFarFromInputFreqsWithWeights(inputFreqWeightPairs, sideWidth, ambiharmonicCurvature, overlyingCurvature, nearbyNoteExclusionCurvature, seed) {
+}
 
 //into looping incorporate ambiharmonicity, maybe all the mutations will be somewhatAmbiharmonic2 or reambiharmonic, and also the beginning and end loops be ambiharmonicSequences
 //totalDuration is the length of the resulting list

@@ -1,10 +1,14 @@
+to have chordiness in the multiambiharmonic sequence, favor large gaps between notes by choosing notes and relative to the already chosen notes in the current column ...
+
+which song again had on drums the measure of two? replicate it for other songs' drums as well
+
+to elongate ambient sines, just play multiple times in a row the same note
+
 try just introducing some randomness to generateAmbiharmonicSequence
 detune or a random tone altogether?
 I want there also to be a chance of picking a non-harmonic frequency in multiHarmonic
 
 why does generateSomewhatAmbiharmonicSequence sound so dissonant?
-
-store effected samples on acer
 
 I want different drum samples to be introduced and rotated over time
 
@@ -13,8 +17,6 @@ maybe memoization into inverse
 elongate ambient sines, call them ambient_sines_elongated
 
 also rationalSong put into Main.hs.main
-
-I might want to do lazily evaluated lists through javascript generators
 
 have also bass octave jumps
 
@@ -32,7 +34,7 @@ now, I could make the audio run on any programming framework capable of playing 
 I could instead try electron
 
 now how would I play a score?
-what I could do is to backend give a copy of the score and play it at the same time as I start movning the time marker on frontend
+what I could do is to backend give a copy of the score and play it at the same time as I start moving the time marker on frontend
 because sending note signals in real time does not work
 
 I want pure data to also send scores back to pianoroll
@@ -84,3 +86,6 @@ at every iteration there is a chance of a mutation. more precisely, each note ha
 
 
 I want parallel chords like harmonies
+
+
+store effected samples on acer
