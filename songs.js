@@ -14,24 +14,59 @@ the effects list can be empty
 there would be such effect parameters as offset, rate, pan and gain
 make a function playDrumPattern or something maybe
 */
-function playSong(instrumentTracks, tempoList) {
+async function playSong(song) {
+  // console.log('song', song)
+  let instrumentTracks = song[0]
+  let tempoList = song[1]
   for (let i in tempoList) {
+    let t = tempoList[i]
     for (let instrumentTrack of instrumentTracks) {
+      // console.log('instrument track', instrumentTrack)
       let samples = instrumentTrack[0]
       let effectedNoteColumn = instrumentTrack[1][i]
+      // console.log('effected note column', effectedNoteColumn)
       for (let effectedNote of effectedNoteColumn) {
-        let noteNumber = effectedNote[0]
+        let noteNumber = effectedNote//effectedNote[0]
         let sample = samples[noteNumber]
-        let noteEffect = effectedNote[1]
-        if (isLooping) {
-          playSampleLoopingly(sample, 'todo')
+        // let noteEffect = effectedNote[1]
+        let isLooping = false//todo
+        if (isLooping == true) {
+          samplePlaying.playSampleLoopingly(sample, 'todo')
         }
         else {
-          playSample(sample, 'todo')
+          samplePlaying.playSample(sample, 1, 0, 0.2, 0, 1)
         }
       }
     }
+    await utils.sleep(t)
+    // return
   }
+}
+function playSong1() {
+  let song1 = []
+  let tempoList = utils.ap(99).map(i => 133)
+  let drumNoteColumns = [
+    [1],
+    [],
+    [2],
+    [],
+    [1],
+    [],
+    [2],
+    [],
+    [1],
+    [],
+    [2],
+    [],
+    [1],
+    [],
+    [2],
+    [],
+  ]
+  let drumTrack = [musicUtils.drumFiles, drumNoteColumns]
+  let instrumentTracks = [drumTrack]
+  song1 = [instrumentTracks, tempoList]
+  playSong(song1)
 }
 
 
@@ -1576,6 +1611,8 @@ async function testDrill() {
 }
 
 export default {
+  playSong,
+  playSong1,
   playDrumPattern,
   playAmbience,
   playMelody,

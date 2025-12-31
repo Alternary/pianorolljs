@@ -530,6 +530,10 @@ async function plotBetween(f, start, end, xAmount, xLogarithmic, yLogarithmic) {
 }
 // plotlyUtils.plotBetween(x => Math.sin(x), 0, 1, 9, false, false)
 
+function padRight(l, len, elem) {
+  return l.concat(ap(len - l.length).map(i => elem))
+}
+
 export default {
   arithmeticProgression,
   ap,
@@ -571,5 +575,6 @@ export default {
   cumulatePairs,
   inverse,
   saveAndReturnPattern,
-  plotBetween
+  plotBetween,
+  padRight
 }

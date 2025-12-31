@@ -502,7 +502,7 @@ let audio
 const vzooms = [1 / 4, 1]
 const hzooms = [1 / (4 * 4 * 4 * 9), 1 / (4 * 4 * 4), 1 / (4 * 4), 1 / 4, 1, 4, 4 * 4]
 let instructions = document.getElementById('instructions')
-instructions.innerHTML = "<b>M adds note, A logs notes, IJKL zoom, S resets zoom, D plays drum pattern, G plays melody, H plays sample pattern, Q plays effects, W changes Q's parameter, E plays effected sample, R plays ambience, T plays sampleSong2, Y plays chordSong, O tests command, P plays chordy partitioned sample song, Å plays chordy partitioned sample song 2, Z plays chordy partitioned sample song 3, X plays more chordy song, C plays ambiharmonic song, V plays multiambiharmonic song, B plays testPlayFreq, > tests drill</b>"
+instructions.innerHTML = "<b>M adds note, A logs notes, IJKL zoom, S resets zoom, D plays drum pattern, G plays melody, H plays sample pattern, Q plays effects, W changes Q's parameter, E plays effected sample, R plays ambience, T plays sampleSong2, Y plays chordSong, O tests command, P plays chordy partitioned sample song, Å plays chordy partitioned sample song 2, Z plays chordy partitioned sample song 3, X plays more chordy song, C plays ambiharmonic song, V plays multiambiharmonic song, B plays testPlayFreq, F plays song1, > tests drill, N starts sampler</b>"
 document.addEventListener('keydown', (event) => {
   switch (event.key) {
     case 'M':
@@ -618,6 +618,7 @@ document.addEventListener('keydown', (event) => {
       plotlyUtils.plotBetween(x => Math.sin(x * 9), -1, 1, 99, false, false)
       break
     case 'F':
+      songs.playSong1()
       break
   }
 })
