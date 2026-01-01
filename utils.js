@@ -128,7 +128,7 @@ function zipWithMany(f, ls) { return zipLists(ls).map(l => f(...l)) }
 function cycle(l, amount) {
   let l2 = []
   for (let x in arithmeticProgression(amount)) {
-    l2 = l2.concat(l)
+    l2 = l2.concat(structuredClone(l))
   }
   return l2
 }

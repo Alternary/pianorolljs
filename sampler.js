@@ -2,11 +2,12 @@ import axios from 'axios'
 import utils from './utils.js'
 import musicUtils from './musicUtils.js'
 import samplePlaying from './samplePlaying.js'
+import process from 'process'
 
 async function sampler() {
   let getMilliseconds = () => (new Date()).getTime()
   let startMilliseconds = getMilliseconds()
-  let loopLength = 32//8//16//32
+  let loopLength = 32 + 8//8//16//32
   let tempo = 155
   let emptyRecordingList = utils.ap(loopLength).map(_ => [])
   let recordingList = utils.ap(loopLength).map(_ => [])
@@ -31,6 +32,9 @@ async function sampler() {
     recordingLists[currentRecordingListsIndex] = recordingLists[currentRecordingListsIndex].map(col => utils.sortByNumber(col, x => x).filter(x => !isNaN(x)))
   }
   function addNote(noteNumber, beat) {
+    // console.log('beat', beat)
+    // console.log('length of previous recording list', recordingLists[currentRecordingListsIndex].length)
+    // console.log(recordingLists[currentRecordingListsIndex])
     // console.log('note number', noteNumber, 'typeof note number', typeof noteNumber)
     let previousRecordingList = recordingLists[currentRecordingListsIndex]
     let newRecordingList = structuredClone(previousRecordingList)
@@ -41,10 +45,12 @@ async function sampler() {
     // setTimeout(() => sortRecordingList(), tempo * 2)
     // setTimeout(() => sortRecordingList(), tempo * 3)
     setTimeout(() => { recordingLists.push(newRecordingList); currentRecordingListsIndex += 1 }, tempo * 0)
+    sortRecordingList()
     //pop past future lists in recordingLists
     for (let j in utils.range(currentRecordingListsIndex + 0, recordingLists.length - 1)) {
       recordingLists.pop()
     }
+    drawGuiPianoroll()
   }
   function deleteNote(noteNumber, beat) {
     let previousRecordingList = recordingLists[currentRecordingListsIndex]
@@ -60,6 +66,8 @@ async function sampler() {
     // setTimeout(() => sortRecordingList(), tempo * 1)
     // setTimeout(() => sortRecordingList(), tempo * 2)
     // setTimeout(() => sortRecordingList(), tempo * 3)
+    sortRecordingList()
+    drawGuiPianoroll()
   }
   function noteInSelection() {
     return recordingLists[currentRecordingListsIndex][selectionX][selectionY]
@@ -143,7 +151,7 @@ async function sampler() {
     ['Delete', 24],
   ]
   let samples = utils.padRight(utils.padRight(squareSamples.concat(utils.ap(100 - (96 + 1)).map(i => '_')).concat(samplePlaying.drumFiles), 200, '_').concat(harmonicBassSamples), 300, '_').concat(reverb2Samples) //into this list place drum sample names and such at their respective indices, such as 101 for bassdrum
-  document.getElementById('sampler_instructions').innerHTML = 'sampler instructions: ; shows recordingList(s), Alt toggles recordOn, _ toggles metronome, / undoes recordingLists, * redoes recordingLists, Escape reloads, Numpad7 doubles loopLength, Numpad9 halves loopLength, Numpad1 decrements loopStart, Numpad3 increments loopStart, z decrements melodyNoteStart, x increments melodyNoteStart, n saves recordingList, m loads recordingList, c changes melodySampleTemplate to square, v changes melodySampleTemplate to harmonicBass, changes melodySampleTemplate to reverbs2, Numpad5 toggles loggingOn, arrow keys move selection, , decrements note, . increments note, CapsLock plays note, < duplicates note, - adds note, : deletes note, space bar pauses and plays, shift plus arrow keys move temporalMarkerPosition, shift and control plus arrow keys move temporalMarkerPosition faster'
+  document.getElementById('sampler_instructions').innerHTML = 'sampler instructions: ; shows recordingList(s), Alt toggles recordOn, _ toggles metronome, / undoes recordingLists, * redoes recordingLists, Numpad7 decrements loopLength, Numpad9 increments loopLength, Numpad1 decrements loopStart, Numpad3 increments loopStart, z decrements melodyNoteStart, x increments melodyNoteStart, n saves recordingList, m loads recordingList, c changes melodySampleTemplate to square, v changes melodySampleTemplate to harmonicBass, changes melodySampleTemplate to reverbs2, Numpad5 toggles loggingOn, arrow keys move selection, , decrements note, . increments note, CapsLock plays note, < duplicates note, - adds note, : deletes note, space bar pauses and plays, shift plus arrow keys move temporalMarkerPosition, shift and control plus arrow keys move temporalMarkerPosition faster'
 
   document.addEventListener('keyup', (event) => {
     if (event.key == 'Shift') {
@@ -155,7 +163,11 @@ async function sampler() {
   })
 
   document.addEventListener('keydown', (event) => {
-    event.preventDefault()
+    if (event.key == 'F12' || event.key == 'F5') {
+    }
+    else {
+      event.preventDefault()
+    }
     // let samples = utils.ap(96 + 1).map(i => melodySampleTemplate + i + '.mp3').concat(utils.ap(100 - (96 + 1)).map(i => '_')).concat(samplePlaying.drumFiles) //into this list place drum sample names and such at their respective indices, such as 101 for bassdrum
 
     let keyNoteNumberPairs = (majorOn ? keyMajorNoteIndexPairs : keyMinorNoteIndexPairs).map(p => [p[0], p[1] + melodyNoteStart]).concat(keyDrumNotePairs.map(p => [p[0], p[1] + 100]))
@@ -180,21 +192,18 @@ async function sampler() {
       currentRecordingListsIndex = Math.max(0, currentRecordingListsIndex - 1)
       // console.log(recordingLists, recordingLists.length, emptyRecordingList)
       console.log('undoing, current recording lists index now', currentRecordingListsIndex)
+      drawGuiPianoroll()
     }
     else if (event.key == '*') {
       currentRecordingListsIndex = Math.min(recordingLists.length - 1, currentRecordingListsIndex + 1)
       console.log('redoing, current recording lists index now', currentRecordingListsIndex)
-    }
-    else if (event.key == 'Escape') {
-      location.reload()
+      drawGuiPianoroll()
     }
     else if (event.key == 'Home') {
-      // loopLength = Math.ceil(loopLength * 2)
-      console.log('todo doubling loopLength, loopLength now', loopLength)
+      loopLength = Math.max(1, loopLength - 1)
     }
     else if (event.key == 'PageUp') {
-      // loopLength = Math.ceil(loopLength / 2)
-      console.log('todo halving loopLength, loopLength now', loopLength)
+      loopLength = loopLength + 1
     }
     else if (event.key == 'End') {
       loopStart = Math.max(0, loopStart - 1)
@@ -294,7 +303,7 @@ async function sampler() {
       }
     }
     else if (event.key == ';') {
-      // console.log('recording list', recordingLis
+      // console.log('recording list', recordingList)
       console.log('recordingLists', recordingLists)
       console.log('current recording list', recordingLists[currentRecordingListsIndex])
       let currentRecordingList = structuredClone(recordingLists[currentRecordingListsIndex].map(col => utils.sortByNumber(col, x => x)))
@@ -326,6 +335,7 @@ async function sampler() {
     }
     else if (event.key == 'n') {
       //save recordingList
+      let playbackWasStopped = playbackStopped
       playbackStopped = true
       // console.log('filename', filename)
       axios.post('http://localhost:3001/shellCommand', { body: 'ls /home/bruh/k/testdir/interactjs-lol/recordingLists/' })
@@ -335,12 +345,13 @@ async function sampler() {
           let filename = prompt('type file name')
 
           axios.post('http://localhost:3001/saveFile', { body: ['/home/bruh/k/testdir/interactjs-lol/recordingLists/' + filename, JSON.stringify(recordingLists[currentRecordingListsIndex])] })
-          playbackStopped = false
+          playbackStopped = playbackWasStopped
         })
     }
     else if (event.key == 'm') {
       //load recordingList
       let filename
+      let playbackWasStopped = playbackStopped
       playbackStopped = true
       axios.post('http://localhost:3001/shellCommand', { body: 'ls /home/bruh/k/testdir/interactjs-lol/recordingLists/' })
         .then(response => {
@@ -352,11 +363,13 @@ async function sampler() {
               // console.log('response data', response.data)
               currentRecordingListsIndex += 1
               recordingLists[currentRecordingListsIndex] = utils.cycle(response.data, Math.ceil(loopLength / response.data.length))
-              playbackStopped = false
+              sortRecordingList()
+              playbackStopped = playbackWasStopped
+
+              drawGuiPianoroll()
             })
 
         })
-      sortRecordingList()
     }
     else if (event.key == 'c') {
       melodyNoteSkip = 0
@@ -414,10 +427,11 @@ async function sampler() {
     }
     else if (event.key == '-') {
       //add note
+      let playbackWasStopped = playbackStopped
       playbackStopped = true
       // // await guiPianorollUpdateInterval
       let noteNumber = Number(prompt('note number'))
-      playbackStopped = false
+      playbackStopped = playbackWasStopped
       addNote(noteNumber, selectionX)
       let sample = samples[noteNumber]
       samplePlaying.playSample(sample, 1, 0, 0.2, 0, 1)
@@ -434,6 +448,9 @@ async function sampler() {
     }
     else if (event.key == ' ') {
       playbackStopped = !playbackStopped
+    }
+    else if (event.key == 'Escape') {
+      console.log('todo')
     }
     else if (keySampleIndexTriple == undefined) {
       console.log('event.key', event.key)
@@ -483,19 +500,33 @@ async function sampler() {
     }
   })
 
+  let drawTemporalMarkerRows = () => {
+    let topTemporalMarkerRow = document.getElementById('topTemporalMarkerRow')
+    let bottomTemporalMarkerRow = document.getElementById('bottomTemporalMarkerRow')
+
+    let markerRow = ''
+    for (let j of utils.ap(loopLength)) {
+      markerRow += j == temporalMarkerPosition ? '||| ' : (j == 8 || j == 4 || j == 12 || j == 16 || j == 20 || j == 24 || j == 28 ? '|.. ' : '..- ')
+    }
+
+    topTemporalMarkerRow.innerHTML = markerRow
+    bottomTemporalMarkerRow.innerHTML = markerRow
+  }
+
   let drawGuiPianoroll = () => {
     let currentRecordingList = structuredClone(recordingLists[currentRecordingListsIndex]//.map(col => utils.sortByNumber(col, x => x))
     )
     let mostNotesInCols = currentRecordingList.reduce((total, col) => Math.max(total, col.length), 0)
     let currentRecordingRows = utils.zipLists(currentRecordingList.map(col => utils.padRight(col.map(s => ('00' + s).substr((s + '').length - 1, 3)), mostNotesInCols, '..-')))
     if (loggingOn) {
-      let markerRow = ''
+      /*let markerRow = ''
       for (let j of utils.ap(loopLength)) {
         markerRow += j == temporalMarkerPosition ? '||| ' : (j == 8 || j == 4 || j == 12 || j == 16 || j == 20 || j == 24 || j == 28 ? '|.. ' : '..- ')
-      }
+      }*/
+
       let recordingListElement = document.getElementById('recordingListElement')
       let recordingListString = ''
-      recordingListString += markerRow
+      // recordingListString += markerRow
       // console.log(markerRow)
       for (let rowNum in currentRecordingRows) {
         let row = currentRecordingRows[rowNum]
@@ -507,27 +538,65 @@ async function sampler() {
           recordingListString += '<br>' + selectionRowString
         }
         let rowString = ''
-        for (let s of row) {
-          rowString += s + ' '
+        for (let colNum in row) {
+          let s = row[colNum]
+          let hexabet = utils.ap(10).map(j => String(j)).concat(['a', 'b', 'c', 'd', 'e', 'f'])
+          // let color = utils.ap(6).map(i => hexabet[Math.floor(Math.random() * 16)]).reduce((totalS, partialS) => totalS + partialS, '') //totally always random colors
+          // let color = utils.ap(6).map(i => hexabet[Math.floor(utils.randomFloat('' + i + ' ' + rowNum + ' ' + colNum) * 16)]).reduce((totalS, partialS) => totalS + partialS, '')
+          // let color = utils.ap(6).map(i => hexabet[Math.floor(Number(s) / 400 * 8 + 8)]).reduce((totalS, partialS) => totalS + partialS, '')
+          let color = utils.ap(6).map(i => hexabet[Math.floor(i / 2) + 1 == String(s[0]) ? 15 : Math.floor(Number(s) / 400 * 8 + 8)]).reduce((totalS, partialS) => totalS + partialS, '')
+          // let color = 'aaaaaa'
+          // rowString += s + ' '
+          rowString += '<div style="background-color: ' + '#' + color + '; display: inline-block"> ' + s + ' </div> '
         }
         // console.log(rowString)
         recordingListString += '<br>' + rowString
       }
       // console.log(markerRow)
-      recordingListString += '<br>' + markerRow
+      // recordingListString += '<br>' + markerRow
       recordingListElement.innerHTML = recordingListString
     }
   }
 
   let beatsPlayedSinceStart = 0
+  let previousSelectionX = selectionX
+  let previousSelectionY = selectionY
+  let previousCurrentRecordingListsIndex = currentRecordingListsIndex
+  let previousTemporalMarkerPosition = temporalMarkerPosition
+  let previousLoopLength = loopLength
   while (true) {
-    drawGuiPianoroll()
+    if (selectionX == previousSelectionX && selectionY == previousSelectionY) {
+      //don't draw since selection wasn't changed
+    }
+    else {
+      drawGuiPianoroll()
+    }
+    previousSelectionX = selectionX
+    previousSelectionY = selectionY
+
+    if (previousCurrentRecordingListsIndex != currentRecordingListsIndex) {
+      drawGuiPianoroll()
+    }
+    previousCurrentRecordingListsIndex = currentRecordingListsIndex
+
+    if (temporalMarkerPosition != previousTemporalMarkerPosition) {
+      drawTemporalMarkerRows()
+    }
+    previousTemporalMarkerPosition = temporalMarkerPosition
+
+    if (previousLoopLength != loopLength) {
+      drawGuiPianoroll()
+      drawTemporalMarkerRows()
+    }
+    previousLoopLength = loopLength
 
     let millisecondsFromStart = getMilliseconds() - startMilliseconds
     let expectedTimeElapsed = beatsPlayedSinceStart * tempo
     //if I haven't played enough beats since start, play a beat
     let expectedBeatsPlayedSinceStart = millisecondsFromStart / tempo
     if (!playbackStopped && (millisecondsFromStart - expectedTimeElapsed <= guiPianorollUpdateInterval && millisecondsFromStart >= expectedTimeElapsed || beatsPlayedSinceStart < expectedBeatsPlayedSinceStart)) {
+      drawTemporalMarkerRows()
+
       if (metronomeOn) {
         if (temporalMarkerPosition == 0 || temporalMarkerPosition == 16) {
           samplePlaying.playSample('./samples/drums/bassdrum4.mp3', 1, 0, 0.2, 0, 1)
@@ -556,89 +625,6 @@ async function sampler() {
         beatsPlayedSinceStart = 0
       }
       await utils.sleep(guiPianorollUpdateInterval)
-    }
-  }
-
-  //old pianoroll loop code
-  let i = -1
-  while (false) {
-    i++
-    // for (let i of utils.ap(99999)) {
-    // for (let i0 of utils.ap(99999)) {
-    //   let i = Math.floor(i0 / 4)
-
-    // let samples = utils.ap(96 + 1).map(i => melodySampleTemplate + i + '.mp3').concat(utils.ap(100 - (96 + 1)).map(i => '_')).concat(samplePlaying.drumFiles) //into this list place drum sample names and such at their respective indices, such as 101 for bassdrum
-
-    // let keyMajorNoteSampleNameIndexTriples = keyMajorNoteIndexPairs.map(pair => { let key = pair[0]; let i = melodyNoteStart + pair[1]; return [key, melodySampleTemplate + i + '.mp3', i] })
-    // let keyMinorNoteSampleNameIndexTriples = keyMinorNoteIndexPairs.map(pair => { let key = pair[0]; let i = melodyNoteStart + pair[1]; return [key, melodySampleTemplate + i + '.mp3', i] })
-    // let keySampleIndexTriples = (majorOn ? keyMajorNoteSampleNameIndexTriples : keyMinorNoteSampleNameIndexTriples).concat(keyDrumSampleNameIndexTriples)
-
-    let currentMillisecondsModified = (Math.round((getMilliseconds() - startMilliseconds) / tempo) * tempo) % (tempo * loopLength)
-    let beat = currentMillisecondsModified / tempo
-
-    let currentRecordingList = structuredClone(recordingLists[currentRecordingListsIndex]//.map(col => utils.sortByNumber(col, x => x))
-    )
-    let mostNotesInCols = currentRecordingList.reduce((total, col) => Math.max(total, col.length), 0)
-    let currentRecordingRows = utils.zipLists(currentRecordingList.map(col => utils.padRight(col.map(s => ('00' + s).substr((s + '').length - 1, 3)), mostNotesInCols, '..-')))
-    if (loggingOn) {
-      // if (i % 22 == 0) {
-      //   console.clear()
-      // }
-      let markerRow = ''
-      for (let j of utils.ap(loopLength)) {
-        markerRow += j == (i % loopLength) ? '||| ' : (j == 8 || j == 4 || j == 12 || j == 16 || j == 20 || j == 24 || j == 28 ? '|.. ' : '..- ')
-      }
-      // console.log(utils.ap(i % loopLength).map(j => '..-') + '|||,' + utils.ap(loopLength - i % loopLength - 1).map(j => '..-'))
-      let recordingListElement = document.getElementById('recordingListElement')
-      let recordingListString = ''
-      recordingListString += markerRow
-      // console.log(markerRow)
-      for (let rowNum in currentRecordingRows) {
-        let row = currentRecordingRows[rowNum]
-        if (rowNum == selectionY) {
-          let selectionRowString = ''
-          for (let j of utils.ap(loopLength)) {
-            selectionRowString += j == selectionX ? '||| ' : '..- '
-          }
-          recordingListString += '<br>' + selectionRowString
-        }
-        let rowString = ''
-        for (let s of row) {
-          rowString += s + ' '
-        }
-        // console.log(rowString)
-        recordingListString += '<br>' + rowString
-      }
-      // console.log(markerRow)
-      recordingListString += '<br>' + markerRow
-      recordingListElement.innerHTML = recordingListString
-    }
-
-    if (metronomeOn) {
-      if (beat == 0 || beat == 16) {
-        samplePlaying.playSample('./samples/drums/bassdrum4.mp3', 1, 0, 0.2, 0, 1)
-      }
-      samplePlaying.playSample('./samples/drums/snare6.mp3', 1, 0, 0.2, 0, 1)
-      if (beat == 8 || beat == 16 + 8) {
-        samplePlaying.playSample('./samples/drums/erans19.mp3', 1, 0, 0.2, 0, 1)
-      }
-    }
-    // for (let j of recordingList[beat]) {
-    // console.log('current recordingLists index', currentRecordingListsIndex)
-    // console.log(recordingLists.length)
-    for (let j of recordingLists[currentRecordingListsIndex][beat]) {
-      // let sample = keySampleIndexTriples.find(triple => triple[2] == j)[1]
-      let sample = samples[j]
-      samplePlaying.playSample(sample, 1, 0, 0.2, 0, 1)
-    }
-    let millisecondsFromStart = getMilliseconds() - startMilliseconds
-    let expectedTimeElapsed = i * tempo
-    await utils.sleep(expectedTimeElapsed + tempo - millisecondsFromStart)
-
-    //waiting until playbackStopped becomes false
-    while (playbackStopped) {
-      startMilliseconds = getMilliseconds()
-      await utils.sleep(20)
     }
   }
 }
